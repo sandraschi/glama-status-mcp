@@ -8,6 +8,10 @@
   "keywords": ["glama", "scoring", "tdqs", "fleet", "dashboard", "mcp", "quality", "docstrings"],
   "tools": [
     "glama_status",
-    "glama_scores_summary"
+    "glama_scores_summary",
+    "glama_daily_report"
+  ],
+  "prompts": [
+    "glama_improvement_plan"
   ]
 }

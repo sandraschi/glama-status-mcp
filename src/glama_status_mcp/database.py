@@ -1,11 +1,9 @@
 import json
 import sqlite3
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Optional
+from datetime import UTC, datetime
 
 from glama_status_mcp.config import DB_PATH
-from glama_status_mcp.models import FleetRepo, RepoScore, ToolScore
+from glama_status_mcp.models import FleetRepo, RepoScore
 
 
 def _get_db() -> sqlite3.Connection:
@@ -101,7 +99,8 @@ def seed_fleet(repos: list[FleetRepo]):
     conn = _get_db()
     for r in repos:
         conn.execute(
-            "INSERT OR IGNORE INTO fleet_repos (name, glama_author, active) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO fleet_repos (name, glama_author, active) "
+            "VALUES (?, ?, ?)",
             (r.name, r.glama_author, 1 if r.active else 0),
         )
     conn.commit()
@@ -110,7 +109,7 @@ def seed_fleet(repos: list[FleetRepo]):
 
 def upsert_repo_score(score: RepoScore) -> int:
     conn = _get_db()
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     conn.execute(
         """INSERT INTO repos
         (name, glama_namespace, glama_slug, overall_grade, overall_score,
@@ -155,7 +154,10 @@ def upsert_repo_score(score: RepoScore) -> int:
             now,
         ),
     )
-    repo_id = conn.execute("SELECT id FROM repos WHERE name=?", (score.name,)).fetchone()["id"]
+    repo_row = conn.execute(
+        "SELECT id FROM repos WHERE name=?", (score.name,)
+    ).fetchone()
+    repo_id = repo_row["id"]
     conn.execute("DELETE FROM tools WHERE repo_id=?", (repo_id,))
     for t in score.tools:
         conn.execute(
@@ -164,16 +166,9 @@ def upsert_repo_score(score: RepoScore) -> int:
              behavior, parameters, conciseness, completeness, scraped_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                repo_id,
-                t.name,
-                t.grade,
-                t.score,
-                t.purpose,
-                t.usage_guidelines,
-                t.behavior,
-                t.parameters,
-                t.conciseness,
-                t.completeness,
+                repo_id, t.name, t.grade, t.score,
+                t.purpose, t.usage_guidelines, t.behavior,
+                t.parameters, t.conciseness, t.completeness,
                 now,
             ),
         )
@@ -212,7 +207,7 @@ def get_all_repo_scores() -> list[dict]:
     return result
 
 
-def get_repo_score(name: str) -> Optional[dict]:
+def get_repo_score(name: str) -> dict | None:
     conn = _get_db()
     r = conn.execute("SELECT * FROM repos WHERE name=?", (name,)).fetchone()
     if not r:
@@ -231,7 +226,8 @@ def get_repo_score(name: str) -> Optional[dict]:
 def get_worst_tools(limit: int = 20) -> list[dict]:
     conn = _get_db()
     rows = conn.execute(
-        """SELECT t.name AS tool_name, t.score AS tool_score, t.grade AS tool_grade,
+        """SELECT t.name AS tool_name, t.score AS tool_score,
+                  t.grade AS tool_grade,
                   r.name AS repo_name, r.overall_grade AS repo_grade
            FROM tools t JOIN repos r ON t.repo_id = r.id
            ORDER BY t.score ASC NULLS LAST
@@ -244,7 +240,7 @@ def get_worst_tools(limit: int = 20) -> list[dict]:
 
 def log_refresh_start() -> int:
     conn = _get_db()
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     cur = conn.execute(
         "INSERT INTO refresh_log (started_at) VALUES (?)", (now,)
     )
@@ -254,7 +250,9 @@ def log_refresh_start() -> int:
     return log_id
 
 
-def log_refresh_end(log_id: int, attempted: int, succeeded: int, failed: int, errors: list[str]):
+def log_refresh_end(
+    log_id: int, attempted: int, succeeded: int, failed: int, errors: list[str]
+):
     conn = _get_db()
     conn.execute(
         """UPDATE refresh_log SET
@@ -262,7 +260,7 @@ def log_refresh_end(log_id: int, attempted: int, succeeded: int, failed: int, er
            repos_failed=?, errors=?
            WHERE id=?""",
         (
-            datetime.now(timezone.utc).isoformat(),
+            datetime.now(UTC).isoformat(),
             attempted, succeeded, failed,
             json.dumps(errors), log_id,
         ),
@@ -274,7 +272,8 @@ def log_refresh_end(log_id: int, attempted: int, succeeded: int, failed: int, er
 def get_refresh_history(limit: int = 10) -> list[dict]:
     conn = _get_db()
     rows = conn.execute(
-        "SELECT * FROM refresh_log ORDER BY started_at DESC LIMIT ?", (limit,)
+        "SELECT * FROM refresh_log ORDER BY started_at DESC LIMIT ?",
+        (limit,),
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
@@ -283,6 +282,7 @@ def get_refresh_history(limit: int = 10) -> list[dict]:
 def create_snapshot(ref_log_id: int) -> str:
     """Create a score snapshot from current repos data, return snapshot_id."""
     import uuid
+
     snapshot_id = str(uuid.uuid4())
     conn = _get_db()
     conn.execute(
@@ -296,15 +296,21 @@ def create_snapshot(ref_log_id: int) -> str:
             (r["id"],),
         ).fetchall()
         worst = tools[0] if tools else None
+        tc_row = conn.execute(
+            "SELECT COUNT(*) FROM tools WHERE repo_id=?", (r["id"],)
+        ).fetchone()
+        tool_count = tc_row[0]
         conn.execute(
             """INSERT INTO score_history
             (snapshot_id, repo_name, overall_grade, overall_score,
-             tdqs_mean, tdqs_min, tool_count, worst_tool_name, worst_tool_score)
+             tdqs_mean, tdqs_min, tool_count,
+             worst_tool_name, worst_tool_score)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                snapshot_id, r["name"], r["overall_grade"], r["overall_score"],
+                snapshot_id, r["name"],
+                r["overall_grade"], r["overall_score"],
                 r["tdqs_mean"], r["tdqs_min"],
-                conn.execute("SELECT COUNT(*) FROM tools WHERE repo_id=?", (r["id"],)).fetchone()[0],
+                tool_count,
                 worst["name"] if worst else None,
                 worst["score"] if worst else None,
             ),
@@ -318,12 +324,14 @@ def get_latest_snapshots(n: int = 2) -> list[dict]:
     """Return the last N snapshots with their data."""
     conn = _get_db()
     snaps = conn.execute(
-        "SELECT * FROM score_snapshots ORDER BY created_at DESC LIMIT ?", (n,)
+        "SELECT * FROM score_snapshots ORDER BY created_at DESC LIMIT ?",
+        (n,),
     ).fetchall()
     result = []
     for s in snaps:
         rows = conn.execute(
-            "SELECT * FROM score_history WHERE snapshot_id=? ORDER BY repo_name",
+            "SELECT * FROM score_history WHERE snapshot_id=? "
+            "ORDER BY repo_name",
             (s["id"],),
         ).fetchall()
         result.append({
@@ -343,19 +351,25 @@ def compute_deltas() -> list[dict]:
 
     curr = {r["repo_name"]: r for r in snaps[0]["repos"]}
     prev = {r["repo_name"]: r for r in snaps[1]["repos"]}
-    all_repos = sorted(set(list(curr.keys()) + list(prev.keys())))
+    all_repos = sorted(set(curr) | set(prev))
 
     deltas = []
     for name in all_repos:
         c = curr.get(name)
         p = prev.get(name)
+        if c and p:
+            change = round(
+                (c["overall_score"] or 0) - (p["overall_score"] or 0), 2
+            )
+        else:
+            change = None
         delta = {
             "repo_name": name,
             "current_grade": c["overall_grade"] if c else None,
             "previous_grade": p["overall_grade"] if p else None,
             "current_score": c["overall_score"] if c else None,
             "previous_score": p["overall_score"] if p else None,
-            "score_change": round((c["overall_score"] or 0) - (p["overall_score"] or 0), 2) if c and p else None,
+            "score_change": change,
             "current_tdqs_mean": c["tdqs_mean"] if c else None,
             "previous_tdqs_mean": p["tdqs_mean"] if p else None,
             "current_worst_tool": c["worst_tool_name"] if c else None,
@@ -381,8 +395,7 @@ def generate_report() -> dict:
 
     worst_tools = get_worst_tools(5)
     stale = []
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for r in repos:
         if r.get("last_scraped"):
             try:
@@ -394,7 +407,7 @@ def generate_report() -> dict:
                 pass
 
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "snapshot_time": snapshot_time,
         "total_repos": len(repos),
         "grade_distribution": grades,

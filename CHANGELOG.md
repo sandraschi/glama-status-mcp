@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.1.1 (2026-06-28)
+
+### Fixed
+- MCP HTTP transport now properly mounted at `/mcp` on FastAPI app
+- 57 ruff lint errors resolved (imports, line length, type annotations)
+- Grade regex hardened for lxml whitespace quirks
+- `start.ps1` no longer uses `cmd.exe /c` for Node.js
+- `justfile` no longer uses `cmd.exe /c`; refresh recipe uses `scripts/refresh.py`
+- `glama.json` includes `glama_daily_report` tool and `glama_improvement_plan` prompt
+- FastMCP `dependencies` kwarg removed (not supported in 3.4+)
+
+### Added
+- 35 backend tests (database, scraper, server API)
+- Playwright E2E test suite (`webapp/e2e/fleet-audit.spec.ts`)
+- Biome TypeScript linting config (`webapp/biome.json`)
+- MCPB manifest + 131KB `.mcpb` bundle (`dist/glama-status-mcp-v0.1.1.mcpb`)
+- Tauri 2.0 native wrapper with NSIS installer (32.6 MB, `native/`)
+- PyInstaller backend spec + `run_server.py` dual-transport entry point
+- Prefab UI cards: `show_glama_status_card`, `show_glama_repo_card`
+- Glama external links in repo table (score page) and tool breakdown (tool page)
+- Dedicated `scripts/refresh.py` for scheduled rescrapes
+- Retractable sidebar navigation with Dashboard/Help pages, grade summary, and collapse toggle
+- Topbar with breadcrumb view title, Report toggle, grade counts, and Refresh panel
+
+### Changed
+- Webapp updated to fleet standards: TailwindCSS v4, Lucide React, Zustand, Framer Motion
+- Switched from npm to Bun (`package-lock.json` removed; `bun.lock` expected)
+- `bg-gray-950` → `bg-zinc-950` (Zinc palette per fleet standard)
+- Animated transitions via Framer Motion (`AnimatePresence`)
+- Persistent state via Zustand store
+- `scripts/` debug files cleaned (15 removed, 1 rewrite)
+
 ## v0.1.0 (2026-06-28)
 
 Initial release.

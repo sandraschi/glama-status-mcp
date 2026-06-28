@@ -1,0 +1,38 @@
+{
+  "productName": "Glama Status",
+  "version": "0.1.1",
+  "identifier": "ai.fleet.glama-status-mcp",
+  "build": {
+    "frontendDist": "../webapp/dist",
+    "devUrl": "http://localhost:11073",
+    "beforeDevCommand": "npx vite --port 11073 --host",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "windows": [{
+      "label": "main",
+      "title": "Glama Status",
+      "width": 1100, "height": 750,
+      "minWidth": 700, "minHeight": 500
+    }],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "resources": [
+      "resources/glama-status-mcp-backend.exe"
+    ],
+    "windows": {
+      "webviewInstallMode": { "type": "skip" },
+      "nsis": {
+        "installMode": "currentUser",
+        "installerHooks": "./windows/hooks.nsh"
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+# MCPB packaging ignore patterns
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+data/
+webapp/
+tests/
+.git/
+.gitignore
+*.db
+*.db-wal
+*.db-shm
+logs/
+*.log
+.env

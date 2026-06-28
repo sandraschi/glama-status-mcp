@@ -4,16 +4,38 @@ Daily-refreshed Glama score tracker for the sandraschi fleet. Scrapes per-tool T
 
 ## Tools
 
-- `glama_status`  -  Portmanteau: list (all repos), get (one repo, per-tool breakdown), worst_tools (lowest scoring tools), refresh (rescrape all + snapshot), history (refresh log), staleness (>7d stale), report (full daily report), deltas (score changes).
-- `glama_scores_summary`  -  Compact fleet-wide score summary with grade distribution.
-- `glama_daily_report`  -  Full markdown daily report: grade table, score deltas, worst tools, stale repos.
+- `glama_status` -- Portmanteau: list (all repos), get (one repo, per-tool breakdown), worst_tools (lowest scoring tools), refresh (rescrape all + snapshot), history (refresh log), staleness (>7d stale), report (full daily report), deltas (score changes since last snapshot).
+- `glama_scores_summary` -- Compact fleet-wide score summary with grade distribution.
+- `glama_daily_report` -- Full markdown daily report: grade table, score deltas, worst tools, stale repos.
+- `show_glama_status_card` -- Prefab card: fleet overview with grade distribution bars and worst tools.
+- `show_glama_repo_card(repo_name)` -- Prefab card: per-repo breakdown with tool scores.
+
+## Prompts
+
+- `glama_improvement_plan(repo_name)` -- Docstring improvement plan with per-tool priorities.
 
 ## Ports
 
-- Backend: 11072
-- Frontend: 11073
+- Backend (FastAPI + MCP HTTP /mcp): 11072
+- Frontend (Vite dev): 11073
+
+## Quick Start
+
+```powershell
+git clone https://github.com/sandraschi/glama-status-mcp.git
+cd glama-status-mcp
+just install
+just web          # HTTP backend on :11072
+just web-frontend # Vite dev on :11073
+just refresh      # Manual scrape + snapshot
+```
+
+## Scored Repos (10 of 35 registered on Glama)
+
+virtualization-mcp (B, 3.06), bumi-mcp (A, 3.64), blender-mcp (C, 2.70), windows-operations-mcp (B, 3.00), worldlabs-mcp (B, 3.38), robotics-mcp (A, 3.58), xkcd-mcp (A, 3.67), cursor-mcp (A, 3.80), steam-mcp (A, 3.81), email-mcp (A, 3.82).
 
 ## Links
 
 - Fleet dashboard: http://127.0.0.1:11073
 - Glama profile: https://glama.ai/mcp/servers?query=author%3Asandraschi
+- Fleet hub: D:\Dev\repos\mcp-central-docs\projects\glama-status-mcp\README.md

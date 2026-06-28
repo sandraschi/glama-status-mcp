@@ -1,0 +1,112 @@
+import { useState, useEffect } from "react";
+import { Settings as SettingsIcon, ExternalLink } from "lucide-react";
+
+const STORAGE_KEY = "glama-status-gh-account";
+
+export function SettingsPage() {
+  const [account, setAccount] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY) || "sandraschi";
+    } catch {
+      return "sandraschi";
+    }
+  });
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (saved) {
+      const t = setTimeout(() => setSaved(false), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [saved]);
+
+  const handleSave = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, account);
+      setSaved(true);
+    } catch {
+      /* localStorage unavailable */
+    }
+  };
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+          Settings
+        </h1>
+        <p className="text-zinc-400 mt-1 text-sm">
+          Configure the Glama tracker preferences.
+        </p>
+      </div>
+
+      <div className="bg-zinc-900 rounded-lg border border-zinc-700 p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <SettingsIcon className="w-5 h-5 text-zinc-400" />
+          <h2 className="font-semibold text-zinc-100">
+            GitHub Account
+          </h2>
+        </div>
+        <p className="text-sm text-zinc-400">
+          The Glama author namespace used to build score page URLs.
+          This matches your GitHub username registered on glama.ai.
+        </p>
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={account}
+            onChange={(e) => setAccount(e.target.value)}
+            placeholder="sandraschi"
+            className="flex-1 bg-zinc-950 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-blue-500"
+          />
+          <button
+            type="button"
+            onClick={handleSave}
+            className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-md font-medium transition-colors"
+          >
+            {saved ? "Saved" : "Save"}
+          </button>
+        </div>
+        <div className="text-xs text-zinc-400 pt-1">
+          <p>
+            Score pages resolve to:{" "}
+            <code className="text-zinc-300 bg-zinc-950 px-1.5 py-0.5 rounded">
+              https://glama.ai/mcp/servers/{account || "sandraschi"}
+              /{"{repo}"}/score
+            </code>
+          </p>
+          <a
+            href={`https://glama.ai/mcp/servers?query=author%3A${account || "sandraschi"}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 mt-2"
+          >
+            View on Glama
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+
+      <div className="bg-zinc-900 rounded-lg border border-zinc-700 p-5">
+        <h2 className="font-semibold text-zinc-100 mb-2">About</h2>
+        <div className="text-sm text-zinc-400 space-y-1">
+          <p>glama-status-mcp v0.1.1</p>
+          <p>
+            <a
+              href="https://github.com/sandraschi/glama-status-mcp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+            >
+              github.com/sandraschi/glama-status-mcp
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </p>
+          <p className="text-zinc-400 mt-2">
+            Ports: backend 11072, frontend 11073, MCP /mcp
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

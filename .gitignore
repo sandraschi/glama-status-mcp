@@ -25,3 +25,16 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# Generated reports
+reports/*.md
+
+# PyInstaller build artifacts
+build/
+dist/*.exe
+dist/*.mcpb
+
+# Tauri native build artifacts
+native/target/
+native/resources/*.exe
+native/binaries/*.exe

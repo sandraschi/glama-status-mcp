@@ -18,7 +18,7 @@ web:
 
 # Run web frontend (Vite dev on 11073)
 web-frontend:
-    Set-Location '{{justfile_directory()}}\webapp' && cmd.exe /c npx vite --port 11073 --host
+    Set-Location '{{justfile_directory()}}\webapp' ; npx vite --port 11073 --host
 
 # Run full stack (backend + frontend + auto-open)
 web-dev:
@@ -26,7 +26,7 @@ web-dev:
 
 # Refresh all scores from Glama (creates a snapshot)
 refresh:
-    uv run python -c "import asyncio; from glama_status_mcp.database import init_db, seed_fleet, upsert_repo_score, create_snapshot, log_refresh_start, log_refresh_end; from glama_status_mcp.models import FLEET_REPOS; from glama_status_mcp.scraper import scrape_repo; import sys; init_db(); seed_fleet(FLEET_REPOS); import time; log_id=log_refresh_start(); errors=[]; s=f=0; total=len(FLEET_REPOS); print(f'Scraping {total} repos...'); async def go(): global s,f; import asyncio; [await asyncio.sleep(0) for _ in range(1)]; r=[await scrape_repo(x.name,x.glama_author) for x in FLEET_REPOS]; [upsert_repo_score(v) for v in r if v and not isinstance(v,Exception)]; global s,f; s=sum(1 for v in r if v and not isinstance(v,Exception)); f=sum(1 for v in r if v is None or isinstance(v,Exception)); [errors.append(f'{FLEET_REPOS[i].name}: {r[i]}') for i in range(len(r)) if isinstance(r[i],Exception)]; asyncio.run(go()); snap=create_snapshot(log_id) if s>0 else None; log_refresh_end(log_id,total,s,f,errors[:10]); print(f'Done: {s}/{total}, snapshot={snap}')"
+    uv run python scripts/refresh.py
 
 # Lint
 lint:
@@ -42,7 +42,7 @@ format:
 
 # Build frontend for production
 build-web:
-    Set-Location '{{justfile_directory()}}\webapp' && cmd.exe /c npm install && cmd.exe /c npx vite build
+    Set-Location '{{justfile_directory()}}\webapp' ; npx vite build
 
 # Smoke test
 smoke:
@@ -51,3 +51,16 @@ smoke:
 # Create daily scheduled task
 schedule-daily:
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File '{{justfile_directory()}}\scripts\register-daily-refresh.ps1'
+
+# Packages
+# Bundle for Claude Desktop (MCPB)
+mcpb-pack:
+    npx @anthropic-ai/mcpb pack . dist/glama-status-mcp-v0.1.1.mcpb
+
+# Build the PyInstaller backend .exe and copy to Tauri resources
+build-sidecar:
+    pwsh -NoProfile -File '{{justfile_directory()}}\native\build.ps1'
+
+# Build the Tauri NSIS desktop installer (full pipeline)
+build-native:
+    pwsh -NoProfile -File '{{justfile_directory()}}\native\build.ps1'

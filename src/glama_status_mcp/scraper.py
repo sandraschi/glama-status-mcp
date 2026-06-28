@@ -1,20 +1,22 @@
 import re
-import asyncio
-import json
-from datetime import datetime, timezone
-from typing import Optional
 
 import httpx
 from bs4 import BeautifulSoup
 
-from glama_status_mcp.config import GLAMA_BASE, SCRAPE_TIMEOUT, SCRAPE_DELAY
-from glama_status_mcp.models import RepoScore, ToolScore, ServerCoherence
+from glama_status_mcp.config import GLAMA_BASE, SCRAPE_TIMEOUT
+from glama_status_mcp.models import RepoScore, ToolScore
 
-_USER_AGENT = "glama-status-mcp/0.1 (fleet monitor; sandraschi fleet; polite daily scrape of own repos)"
+_USER_AGENT = (
+    "glama-status-mcp/0.1 (sandraschi fleet; daily score scrape)"
+)
 
 
 def _parse_grade(text: str) -> str:
-    m = re.search(r'\b[ABCDF]\b', text)
+    # Match standalone grade letter A/B/C/D/F adjacent to tool name suffix
+    m = re.search(r'[a-z0-9_]([ABCDF])(?:\s|[0-9]|$)', text)
+    if m:
+        return m.group(1)
+    m = re.search(r'(?<![a-zA-Z0-9])[ABCDF](?![a-zA-Z0-9])', text)
     return m.group(0) if m else ""
 
 
@@ -23,7 +25,7 @@ def _parse_score(text: str) -> float:
     return float(m.group(1)) if m else 0.0
 
 
-async def scrape_repo(name: str, namespace: str = "sandraschi", slug: str = "") -> Optional[RepoScore]:
+async def scrape_repo(name: str, namespace: str = "sandraschi", slug: str = "") -> RepoScore | None:
     """Fetch and parse a single Glama score page.
     
     Uses polite scraping: descriptive UA, delay handling, timeout.

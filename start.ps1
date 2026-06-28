@@ -24,6 +24,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ScriptRoot = Split-Path -Parent $PSCommandPath
+Set-Location $ScriptRoot
 $BackendPort = 11072
 $FrontendPort = 11073
 $RepoName = "glama-status-mcp"
@@ -48,15 +49,21 @@ Write-Host "=== $RepoName ==="
 Require-Command -Command "uv" -WingetId "astral-sh.uv"
 Require-Command -Command "node" -WingetId "OpenJS.NodeJS"
 
-# ── Python deps ──
+# -- Python deps --
 if (-not (Test-Path (Join-Path $ScriptRoot ".venv"))) {
     Write-Host "Installing Python dependencies..."
 }
+$prevEA = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 uv sync --extra dev --extra web 2>&1 | Out-Null
+$ErrorActionPreference = $prevEA
 
-# ── Import smoke test ──
+# -- Import smoke test --
 Write-Host "Verifying Python imports..."
-uv run python -c "from glama_status_mcp.database import init_db, seed_fleet; from glama_status_mcp.models import FLEET_REPOS; init_db(); seed_fleet(FLEET_REPOS); print('  OK')" 2>&1
+$prevEA2 = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+uv run python scripts/smoke.py 2>&1
+$ErrorActionPreference = $prevEA2
 
 # ── Port zombie clearing ──
 Get-NetTCPConnection -LocalPort $BackendPort -ErrorAction SilentlyContinue |
@@ -96,14 +103,17 @@ $WebRoot = Join-Path $ScriptRoot "webapp"
 if (-not (Test-Path (Join-Path $WebRoot "node_modules"))) {
     Write-Host "Installing frontend dependencies..."
     Push-Location $WebRoot
-    cmd.exe /c npm install 2>&1 | Out-Null
+    $prevEA3 = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    npm install 2>&1 | Out-Null
+    $ErrorActionPreference = $prevEA3
     Pop-Location
 }
 
 $frontendJob = Start-Job -Name "glama-frontend" -ScriptBlock {
     param($Root, $Port)
     Set-Location $Root
-    cmd.exe /c npx vite --port $Port --host
+    npx vite --port $Port --host
 } -ArgumentList $WebRoot, $FrontendPort
 
 Write-Host "Frontend: http://127.0.0.1:$FrontendPort"

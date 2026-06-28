@@ -51,3 +51,8 @@ select = ["E", "F", "I", "UP", "S", "PTH"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.21.0",
+]
