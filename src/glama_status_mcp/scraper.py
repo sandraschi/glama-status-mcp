@@ -23,7 +23,7 @@ def _parse_score(text: str) -> float:
     return float(m.group(1)) if m else 0.0
 
 
-async def scrape_repo(name: str, namespace: str = "sandraschi") -> Optional[RepoScore]:
+async def scrape_repo(name: str, namespace: str = "sandraschi", slug: str = "") -> Optional[RepoScore]:
     """Fetch and parse a single Glama score page.
     
     Uses polite scraping: descriptive UA, delay handling, timeout.
@@ -33,8 +33,9 @@ async def scrape_repo(name: str, namespace: str = "sandraschi") -> Optional[Repo
     import os
     use_brightdata = os.getenv("GLAMA_USE_BRIGHTDATA", "").lower() in ("1", "true", "yes")
     brightdata_token = os.getenv("GLAMA_BRIGHTDATA_TOKEN", "")
+    path = slug or name
 
-    url = f"{GLAMA_BASE}/{namespace}/{name}/score"
+    url = f"{GLAMA_BASE}/{namespace}/{path}/score"
     headers = {"User-Agent": _USER_AGENT, "Accept": "text/html"}
 
     async with httpx.AsyncClient(timeout=SCRAPE_TIMEOUT, follow_redirects=True) as client:

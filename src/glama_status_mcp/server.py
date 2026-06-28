@@ -173,12 +173,15 @@ async def _do_refresh(ctx: Optional[Context] = None) -> dict:
         if ctx:
             ctx.info(f"Scraping {repo.name} ({i+1}/{total})...")
         try:
-            result = await scrape_repo(repo.name, repo.glama_author)
-            if result:
+            result = await scrape_repo(repo.name, repo.glama_author, repo.glama_slug)
+            if result and result.tools:
                 upsert_repo_score(result)
                 succeeded += 1
                 if ctx:
                     ctx.info(f"  {repo.name}: grade {result.overall_grade}, {len(result.tools)} tools")
+            elif result and not result.tools:
+                failed += 1
+                errors.append(f"{repo.name}: score page exists but no tools scored")
             else:
                 failed += 1
                 errors.append(f"{repo.name}: no score page found (404)")
