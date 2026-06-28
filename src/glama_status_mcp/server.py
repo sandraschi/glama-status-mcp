@@ -22,7 +22,6 @@ from glama_status_mcp.database import (
     seed_fleet,
     upsert_repo_score,
 )
-from glama_status_mcp.models import FLEET_REPOS
 from glama_status_mcp.scraper import scrape_repo
 
 mcp = FastMCP("glama-status-mcp")
@@ -30,7 +29,8 @@ mcp = FastMCP("glama-status-mcp")
 _READ_ONLY = {"readonly": True}
 _MUTATING: dict[str, bool] = {}
 
-_OP_LIST = "list, get, worst_tools, refresh, history, staleness, report, deltas"
+_OP_LIST = ("list, get, worst_tools, refresh, history, staleness, "
+             "report, deltas, add_repo, remove_repo, reload_config")
 
 
 @mcp.tool(annotations=_MUTATING)
@@ -58,6 +58,9 @@ async def glama_status(
     - staleness:  Repos >7d since last scrape.
     - report:  Full daily status report.
     - deltas:  Score changes between last two snapshots.
+    - add_repo:  Add a repo to track (name, optional author/slug).
+    - remove_repo:  Stop tracking a repo.
+    - reload_config:  Reload fleet-repos.json config file.
 
     Args:
         operation: One of: list, get, worst_tools, refresh, history,
@@ -172,6 +175,46 @@ async def glama_status(
             "message": f"Found {len(deltas)} repos with score changes.",
         }
 
+    if operation == "add_repo":
+        if not repo_name:
+            return {"success": False, "error": "repo_name required."}
+        from glama_status_mcp.models import DEFAULT_AUTHOR
+        from glama_status_mcp.models import add_repo as _add
+        author = DEFAULT_AUTHOR
+        new = _add(name=repo_name, author=author)
+        return {
+            "success": True,
+            "operation": operation,
+            "data": {"name": new.name, "glama_author": new.glama_author},
+            "message": f"Added {repo_name} (author: {new.glama_author}). "
+                       f"Run refresh to scrape scores.",
+        }
+
+    if operation == "remove_repo":
+        if not repo_name:
+            return {"success": False, "error": "repo_name required."}
+        from glama_status_mcp.models import remove_repo as _remove
+        removed = _remove(repo_name)
+        return {
+            "success": removed,
+            "operation": operation,
+            "message": f"Removed {repo_name}." if removed
+            else f"Repo '{repo_name}' not in fleet.",
+        }
+
+    if operation == "reload_config":
+        import importlib
+
+        import glama_status_mcp.models as mmod
+        importlib.reload(mmod)
+        _FR = mmod.load_fleet_repos()
+        return {
+            "success": True,
+            "operation": operation,
+            "data": {"count": len(_FR)},
+            "message": f"Reloaded config: {len(_FR)} repos tracked.",
+        }
+
     return {
         "success": False,
         "error": f"Unknown operation '{operation}'.",
@@ -180,13 +223,14 @@ async def glama_status(
 
 
 async def _do_refresh(ctx: Context | None = None) -> dict:
+    from glama_status_mcp.models import FLEET_REPOS as _FR
     log_id = log_refresh_start()
     errors: list[str] = []
     succeeded = 0
     failed = 0
-    total = len(FLEET_REPOS)
+    total = len(_FR)
 
-    for i, repo in enumerate(FLEET_REPOS):
+    for i, repo in enumerate(_FR):
         if ctx:
             ctx.info(f"Scraping {repo.name} ({i + 1}/{total})...")
         try:
@@ -730,8 +774,9 @@ def glama_fleet_analysis_prompt() -> str:
 
 
 def _init():
+    from glama_status_mcp.models import FLEET_REPOS as _FR
     init_db()
-    seed_fleet(FLEET_REPOS)
+    seed_fleet(_FR)
 
 
 def main():

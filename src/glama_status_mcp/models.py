@@ -1,4 +1,19 @@
+"""Pydantic models + fleet repo list.
+
+FLEET_REPOS is the default tracked list. To track repos from
+any Glama author, add entries via glama_status(operation="add_repo")
+or edit the `config/fleet-repos.json` file in the repo root.
+"""
+
+import json
+import os
+from pathlib import Path
+
 from pydantic import BaseModel, Field
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+CONFIG_FILE = REPO_ROOT / "config" / "fleet-repos.json"
+DEFAULT_AUTHOR = os.environ.get("GLAMA_AUTHOR", "sandraschi")
 
 
 class ToolScore(BaseModel):
@@ -49,17 +64,87 @@ class FleetRepo(BaseModel):
         return f"https://glama.ai/mcp/servers/{self.glama_author}/{slug}/score"
 
 
-# 10 sandraschi repos with actual Glama scores (out of 35 registered)
-# slug overrides for repos where Glama slug differs from repo name
-FLEET_REPOS: list[FleetRepo] = [
-    FleetRepo(name="virtualization-mcp"),               # B   3.06  9 tools
-    FleetRepo(name="bumi-mcp"),                         # A   3.64  2 tools
-    FleetRepo(name="blender-mcp"),                      # C   2.70  67 tools
-    FleetRepo(name="windows-operations-mcp"),           # B   3.00  17 tools
-    FleetRepo(name="worldlabs-mcp"),                    # B   3.38  20 tools
-    FleetRepo(name="robotics-mcp"),                     # A   3.58  8 tools
-    FleetRepo(name="xkcd-mcp"),                         # A   3.67  6 tools
-    FleetRepo(name="cursor-mcp"),                       # A   3.80  6 tools
-    FleetRepo(name="steam-mcp"),                        # A   3.81  14 tools
-    FleetRepo(name="email-mcp"),                        # A   3.82  10 tools
-]
+def _default_fleet() -> list[FleetRepo]:
+    """Default demo fleet -- example MCP servers with Glama scores."""
+    return [
+        FleetRepo(name="virtualization-mcp"),
+        FleetRepo(name="bumi-mcp"),
+        FleetRepo(name="blender-mcp"),
+        FleetRepo(name="windows-operations-mcp"),
+        FleetRepo(name="worldlabs-mcp"),
+        FleetRepo(name="robotics-mcp"),
+        FleetRepo(name="xkcd-mcp"),
+        FleetRepo(name="cursor-mcp"),
+        FleetRepo(name="steam-mcp"),
+        FleetRepo(name="email-mcp"),
+    ]
+
+
+def load_fleet_repos() -> list[FleetRepo]:
+    """Load fleet repos from config file, falling back to defaults."""
+    CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    if CONFIG_FILE.exists():
+        try:
+            data = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+            repos = []
+            for entry in data:
+                repos.append(FleetRepo(
+                    name=entry["name"],
+                    glama_author=entry.get("glama_author", DEFAULT_AUTHOR),
+                    glama_slug=entry.get("glama_slug", ""),
+                    active=entry.get("active", True),
+                ))
+            if repos:
+                return repos
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    # Write default config if missing
+    _save_fleet(_default_fleet())
+    return _default_fleet()
+
+
+def _save_fleet(repos: list[FleetRepo]) -> None:
+    """Persist fleet repo list to config file."""
+    CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    data = []
+    for r in repos:
+        data.append({
+            "name": r.name,
+            "glama_author": r.glama_author,
+            "glama_slug": r.glama_slug,
+            "active": r.active,
+        })
+    CONFIG_FILE.write_text(
+        json.dumps(data, indent=2), encoding="utf-8"
+    )
+
+
+def add_repo(name: str, author: str = "", slug: str = "") -> FleetRepo:
+    """Add a repo to the fleet and persist."""
+    repos = load_fleet_repos()
+    existing = [r for r in repos if r.name == name]
+    if existing:
+        return existing[0]
+    new = FleetRepo(
+        name=name,
+        glama_author=author or DEFAULT_AUTHOR,
+        glama_slug=slug,
+    )
+    repos.append(new)
+    _save_fleet(repos)
+    return new
+
+
+def remove_repo(name: str) -> bool:
+    """Remove a repo from the fleet config. Returns True if removed."""
+    repos = load_fleet_repos()
+    filtered = [r for r in repos if r.name != name]
+    if len(filtered) == len(repos):
+        return False
+    _save_fleet(filtered)
+    return True
+
+
+FLEET_REPOS: list[FleetRepo] = load_fleet_repos()

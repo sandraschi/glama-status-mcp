@@ -29,6 +29,9 @@ logs/
 # Generated reports
 reports/*.md
 
+# User fleet config (tracked repos from any Glama author)
+config/fleet-repos.json
+
 # PyInstaller build artifacts
 build/
 dist/*.exe
