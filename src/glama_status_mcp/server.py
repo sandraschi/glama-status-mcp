@@ -180,10 +180,8 @@ async def _do_refresh(ctx: Optional[Context] = None) -> dict:
                 if ctx:
                     ctx.info(f"  {repo.name}: grade {result.overall_grade}, {len(result.tools)} tools")
             elif result and not result.tools:
-                failed += 1
-                errors.append(f"{repo.name}: score page exists but no tools scored")
+                errors.append(f"{repo.name}: page exists but no tools scored (not yet analyzed)")
             else:
-                failed += 1
                 errors.append(f"{repo.name}: no score page found (404)")
         except Exception as e:
             failed += 1

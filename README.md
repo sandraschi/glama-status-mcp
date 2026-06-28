@@ -40,9 +40,22 @@ just refresh      # Manual scrape + snapshot
 4. **Daily refresh** via Scheduled Task or `just refresh` creates a new snapshot
 5. **Delta engine** compares latest two snapshots to show changes
 
-## Fleet repos tracked
+## Scored repos (10 of 35 registered on Glama)
 
-22 MCP servers: virtualization-mcp, bumi-mcp, leanforge-mcp, freecad-mcp, qcad-mcp, arxiv-mcp, aiwatcher-mcp, yahboom-mcp, devices-mcp, plex-mcp, calibre-mcp, robotics-mcp, godot-mcp, system-admin-mcp, database-operations-mcp, worldlabs-mcp, blender-mcp, gimp-mcp, inkscape-mcp, unity3d-mcp, git-github-mcp, docker-mcp.
+| Repo | Grade | Score | Tools |
+|------|-------|-------|-------|
+| blender-mcp | C | 2.70 | 67 |
+| windows-operations-mcp | B | 3.00 | 17 |
+| virtualization-mcp | B | 3.06 | 9 |
+| worldlabs-mcp | B | 3.38 | 20 |
+| robotics-mcp | A | 3.58 | 8 |
+| bumi-mcp | A | 3.64 | 2 |
+| xkcd-mcp | A | 3.67 | 6 |
+| cursor-mcp | A | 3.80 | 6 |
+| steam-mcp | A | 3.81 | 14 |
+| email-mcp | A | 3.82 | 10 |
+
+25 more registered on Glama but not yet analyzed (page exists, no tools).
 
 ## Scoring (Glama TDQS)
 

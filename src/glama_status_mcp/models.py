@@ -50,42 +50,17 @@ class FleetRepo(BaseModel):
         return f"https://glama.ai/mcp/servers/{self.glama_author}/{slug}/score"
 
 
-# All 35 sandraschi repos found on Glama via API
+# 10 sandraschi repos with actual Glama scores (out of 35 registered)
 # slug overrides for repos where Glama slug differs from repo name
 FLEET_REPOS: list[FleetRepo] = [
-    FleetRepo(name="virtualization-mcp"),
-    FleetRepo(name="bumi-mcp"),
-    FleetRepo(name="freecad-mcp"),
-    FleetRepo(name="database-operations-mcp"),
-    FleetRepo(name="filesystem-mcp"),
-    FleetRepo(name="windows-computer-use-mcp", glama_slug="windows-computer-use-mcp"),
-    FleetRepo(name="ittybittyvideos", glama_slug="ittybittyvideos"),
-    FleetRepo(name="calibre-mcp", glama_slug="calibremcp"),
-    FleetRepo(name="plex-mcp", glama_slug="plexmcp"),
-    FleetRepo(name="nest-protect-mcp"),
-    FleetRepo(name="logic-analyzer-mcp"),
-    FleetRepo(name="oscilloscope-mcp"),
-    FleetRepo(name="cursor-mcp"),
-    FleetRepo(name="xkcd-mcp"),
-    FleetRepo(name="openbci-mcp"),
-    FleetRepo(name="worldlabs-mcp"),
-    FleetRepo(name="blender-mcp"),
-    FleetRepo(name="openclaude-mcp"),
-    FleetRepo(name="ai-producer-hub"),
-    FleetRepo(name="inkscape-mcp"),
-    FleetRepo(name="steam-mcp"),
-    FleetRepo(name="nuki-mcp"),
-    FleetRepo(name="streamfog-mcp"),
-    FleetRepo(name="sdr-mcp"),
-    FleetRepo(name="opencode-cli-mcp"),
-    FleetRepo(name="email-mcp"),
-    FleetRepo(name="discord-mcp"),
-    FleetRepo(name="openclaw-molt-mcp"),
-    FleetRepo(name="directmedia-mcp"),
-    FleetRepo(name="observability-mcp"),
-    FleetRepo(name="ocr-mcp"),
-    FleetRepo(name="robotics-mcp"),
-    FleetRepo(name="tailscale-mcp"),
-    FleetRepo(name="notepadpp-mcp"),
-    FleetRepo(name="windows-operations-mcp"),
+    FleetRepo(name="virtualization-mcp"),               # B   3.06  9 tools
+    FleetRepo(name="bumi-mcp"),                         # A   3.64  2 tools
+    FleetRepo(name="blender-mcp"),                      # C   2.70  67 tools
+    FleetRepo(name="windows-operations-mcp"),           # B   3.00  17 tools
+    FleetRepo(name="worldlabs-mcp"),                    # B   3.38  20 tools
+    FleetRepo(name="robotics-mcp"),                     # A   3.58  8 tools
+    FleetRepo(name="xkcd-mcp"),                         # A   3.67  6 tools
+    FleetRepo(name="cursor-mcp"),                       # A   3.80  6 tools
+    FleetRepo(name="steam-mcp"),                        # A   3.81  14 tools
+    FleetRepo(name="email-mcp"),                        # A   3.82  10 tools
 ]
