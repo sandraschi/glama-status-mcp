@@ -1,41 +1,41 @@
 # glama-status-mcp
 
-Daily-refreshed Glama score tracker for the MCP fleet. Scrapes per-tool TDQS grades from glama.ai, stores in SQLite with snapshot history, surfaces via MCP tools and a Vite/React web dashboard.
+Daily-refreshed Glama TDQS score tracker for any MCP fleet. Scrapes per-tool grades from glama.ai, stores in SQLite with snapshot history, surfaces via MCP tools and a Vite/React web dashboard. Configurable via `config/fleet-repos.json` -- track repos from any GitHub/Glama author.
 
 ## Tools
 
-- `glama_status` -- Portmanteau: list (all repos), get (one repo, per-tool breakdown), worst_tools (lowest scoring tools), refresh (rescrape all + snapshot), history (refresh log), staleness (>7d stale), report (full daily report), deltas (score changes since last snapshot).
-- `glama_scores_summary` -- Compact fleet-wide score summary with grade distribution.
+- `glama_status` -- Portmanteau with 11 operations: list, get, worst_tools, refresh, history, staleness, report, deltas, add_repo, remove_repo, reload_config.
+- `glama_scores_summary` -- Compact fleet-wide grade distribution and per-repo stats.
 - `glama_daily_report` -- Full markdown daily report: grade table, score deltas, worst tools, stale repos.
-- `show_glama_status_card` -- Prefab card: fleet overview with grade distribution bars and worst tools.
-- `show_glama_repo_card(repo_name)` -- Prefab card: per-repo breakdown with tool scores.
+- `glama_agentic_analyze(repo_name?)` -- LLM-powered analysis via ctx.sample(). Generates actionable fix todos.
+- `glama_generate_reports(repo_name?)` -- Writes per-repo markdown fix-todo reports to `reports/` directory.
+- `show_glama_status_card` -- Prefab card: fleet overview dashboard.
+- `show_glama_repo_card(repo_name)` -- Prefab card: per-repo score breakdown with tool scores.
 
 ## Prompts
 
-- `glama_improvement_plan(repo_name)` -- Docstring improvement plan with per-tool priorities.
+- `glama_improvement_plan(repo_name)` -- Per-tool fix priorities with 6 dimension scores.
+- `glama_fleet_analysis_prompt()` -- Fleet-wide health snapshot for LLM ingestion.
 
 ## Ports
 
 - Backend (FastAPI + MCP HTTP /mcp): 11072
 - Frontend (Vite dev): 11073
 
-## Quick Start
+## Architecture
 
-```powershell
-git clone https://github.com/sandraschi/glama-status-mcp.git
-cd glama-status-mcp
-just install
-just web          # HTTP backend on :11072
-just web-frontend # Vite dev on :11073
-just refresh      # Manual scrape + snapshot
-```
-
-## Scored Repos (10 of 35 registered on Glama)
-
-virtualization-mcp (B, 3.06), bumi-mcp (A, 3.64), blender-mcp (C, 2.70), windows-operations-mcp (B, 3.00), worldlabs-mcp (B, 3.38), robotics-mcp (A, 3.58), xkcd-mcp (A, 3.67), cursor-mcp (A, 3.80), steam-mcp (A, 3.81), email-mcp (A, 3.82).
+- `src/glama_status_mcp/server.py` -- FastMCP + FastAPI (7 tools, 2 prompts, agentic sampling)
+- `src/glama_status_mcp/scraper.py` -- Async HTML scraper for glama.ai
+- `src/glama_status_mcp/database.py` -- SQLite with 6 tables, snapshot/delta engine
+- `src/glama_status_mcp/models.py` -- Pydantic models, configurable fleet-repos.json loader
+- `src/glama_status_mcp/llm.py` -- Glom-On auto-discovery + chat client
+- `src/glama_status_mcp/reporting.py` -- Per-repo markdown report generator
+- `webapp/` -- Vite + React + TailwindCSS v4 (6 pages, 12 components)
+- `native/` -- Tauri 2.0 + NSIS installer
+- `config/fleet-repos.json` -- User-editable tracked repo list
 
 ## Links
 
-- Fleet dashboard: http://127.0.0.1:11073
-- Glama profile: https://glama.ai/mcp/servers?query=author%3Asandraschi
-- Fleet hub: D:\Dev\repos\mcp-central-docs\projects\glama-status-mcp\README.md
+- Dashboard: http://127.0.0.1:11073
+- Glama: https://glama.ai/mcp/servers
+- Fleet docs: mcp-central-docs/projects/glama-status-mcp/README.md

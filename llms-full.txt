@@ -1,141 +1,196 @@
-# glama-status-mcp
+# glama-status-mcp -- Full Corpus
 
-A daily-refreshed Glama score tracker for the sandraschi fleet of MCP servers. Scrapes per-tool TDQS (Tool Definition Quality Score) grades from glama.ai, stores data in SQLite with snapshot history for delta tracking, and surfaces it via MCP tools and a Vite/React web dashboard.
+A daily-refreshed Glama TDQS score tracker for MCP fleets.
+Scrapes per-tool grades from glama.ai, stores in SQLite with snapshot
+history for delta tracking, surfaces via MCP tools, Prefab cards, a
+6-page web dashboard, and an LLM-powered chat interface.
 
 ## Architecture
 
 ```
 glama-status-mcp/
 ├── src/glama_status_mcp/
-│   ├── server.py        # FastMCP server: 3 tools + FastAPI HTTP mode
-│   ├── scraper.py       # Async HTML scraper for glama.ai score pages
-│   ├── database.py      # SQLite storage (repos, tools, snapshots, history)
-│   ├── models.py        # Pydantic models + 22 fleet repo list
-│   └── config.py        # Paths, constants, env vars
-├── webapp/              # Vite + React dashboard
+│   ├── server.py    -- FastMCP + FastAPI: 7 tools + 2 prompts
+│   ├── scraper.py   -- Async HTML scraper for glama.ai score pages
+│   ├── database.py  -- SQLite with 6 tables, snapshot + delta engine
+│   ├── models.py    -- Pydantic models, fleet-repos.json loader
+│   ├── llm.py       -- Glom-On auto-discovery + chat client
+│   ├── reporting.py -- Per-repo markdown report generator
+│   └── config.py    -- Paths, constants, env vars
+├── webapp/          -- Vite + React + TailwindCSS v4
 │   ├── src/
-│   │   ├── App.tsx
-│   │   └── components/
-│   │       ├── ScoreTable.tsx    # Sortable fleet-wide table
-│   │       ├── ToolBreakdown.tsx # Per-tool dimension bars
-│   │       └── RefreshPanel.tsx  # Manual refresh trigger
-│   └── vite.config.ts
-├── data/                # SQLite database (gitignored)
-├── tests/
-├── scripts/
-│   └── inspect_glama_page*.py  # Debug scrapers
-├── PRD.md
-├── CHANGELOG.md
-├── justfile
-├── glama.json
-├── llms.txt
-└── llms-full.txt
+│   │   ├── components/ (12 components)
+│   │   │   ├── Sidebar.tsx, ScoreTable.tsx, ToolBreakdown.tsx
+│   │   │   ├── ReportView.tsx, ToolsPage.tsx
+│   │   │   ├── ChatPage.tsx, HelpPage.tsx, SettingsPage.tsx
+│   │   │   └── RefreshPanel.tsx
+│   │   ├── store.ts, types.ts, index.css
+│   │   └── main.tsx, App.tsx
+│   ├── e2e/fleet-audit.spec.ts
+│   └── playwright.config.ts, biome.json, vite.config.ts
+├── native/          -- Tauri 2.0 wrapper
+│   ├── src/main.rs, backend.rs
+│   ├── tauri.conf.json, build.ps1, Cargo.toml
+│   ├── windows/hooks.nsh, capabilities/default.json
+│   └── icons/
+├── config/          -- fleet-repos.json (user-editable)
+├── reports/         -- Generated per-repo fix-todo reports
+├── data/            -- SQLite database (gitignored)
+├── tests/           -- 35 pytest tests
+├── mcpb/            -- MCPB bundle assets
+├── scripts/         -- refresh.py, smoke.py, register-daily-refresh.ps1
+└── dist/            -- MCPB + Tauri build outputs
 ```
 
 ## MCP Tools
 
-### glama_status
+### glama_status (portmanteau, MUTATING)
 
-Portmanteau tool for all Glama status operations.
+| Operation | Description | Params |
+|-----------|-------------|--------|
+| `list` | All repos with grades, worst-first | -- |
+| `get` | Per-tool breakdown for one repo | repo_name (required) |
+| `worst_tools` | Lowest-scoring tools fleet-wide | limit (optional, default 50) |
+| `refresh` | Rescrape all repos + snapshot | -- |
+| `history` | Recent refresh log entries | limit (optional, default 10) |
+| `staleness` | Repos >7 days since last scrape | -- |
+| `report` | Full daily status report | -- |
+| `deltas` | Score changes since last snapshot | -- |
+| `add_repo` | Add a repo to track | repo_name (required) |
+| `remove_repo` | Stop tracking a repo | repo_name (required) |
+| `reload_config` | Reload fleet-repos.json | -- |
 
-| Operation | Description | Required params |
-|-----------|-------------|-----------------|
-| `list` | All repos with grades, worst-first |  -  |
-| `get` | Per-tool breakdown for one repo | `repo_name` |
-| `worst_tools` | Lowest-scoring tools across fleet | `limit` (optional) |
-| `refresh` | Rescrape all 22 repos + snapshot |  -  |
-| `history` | Recent refresh log entries | `limit` (optional) |
-| `staleness` | Repos with data >7 days old |  -  |
-| `report` | Full daily status report |  -  |
-| `deltas` | Score changes since last snapshot |  -  |
+### glama_scores_summary (READ_ONLY)
+Compact fleet-wide grade distribution and per-repo stats.
 
-### glama_scores_summary
+### glama_daily_report (READ_ONLY)
+Full markdown report: grade table, score deltas, worst tools, stale repos.
 
-Compact summary: grade distribution count (A/B/C/D/F/none) and per-repo fast stats.
+### glama_agentic_analyze (MUTATING, requires ctx.sample)
+Uses the connected LLM to analyze Glama scores and produce actionable fix
+todos. Falls back gracefully to static analysis when sampling is unavailable.
 
-### glama_daily_report
+### glama_generate_reports (MUTATING)
+Writes per-repo markdown reports to `reports/` directory with tool-by-tool
+breakdowns and fix todos. Pass `repo_name` for a single repo, omit for all.
 
-Generates a full markdown report including:
-- Grade distribution table
-- Score changes since last snapshot (deltas with ▲/▼ arrows)
-- All repos table sorted worst-first
-- Worst tools fleet-wide
-- Stale repos needing release + rescan
+### show_glama_status_card (Prefab, app=True)
+Rich in-chat card showing grade distribution bars, per-repo scores, worst
+tools fleet-wide, and stale repos.
 
-## TDQS Scoring (Glama)
+### show_glama_repo_card (Prefab, app=True)
+Per-repo breakdown card with overall grade, TDQS, coherence dimensions,
+maintenance grade, and per-tool scores sorted worst-first.
 
-Server-level TDQS = 60% mean + 40% minimum across all tools.
+## Prompts
 
-| Dimension | Weight | What it checks |
-|-----------|--------|----------------|
-| Purpose Clarity | 25% | First sentence states what the tool does |
-| Usage Guidelines | 20% | When to / not to call, preconditions |
-| Behavioral Transparency | 20% | Returns, side effects, error conditions |
-| Parameter Semantics | 15% | Every param: type, values, what it affects |
-| Conciseness & Structure | 10% | Not a wall of text, not a one-liner |
-| Contextual Completeness | 10% | Enough context to use without reading source |
+### glama_improvement_plan(repo_name)
+Docstring improvement plan with per-tool priorities, 6 dimension scores,
+and a 6-step fix checklist.
 
-Grade thresholds: A ≥ 3.5, B ≥ 3.0, C ≥ 2.0, D ≥ 1.0, F < 1.0
+### glama_fleet_analysis_prompt()
+Fleet-wide health snapshot for LLM ingestion -- repo table, grade
+distribution, stale repos list, and an analysis task prompt.
 
-## Fleet Improvement Workflow
+## REST API
 
-1. Run `glama_daily_report()` or `glama_status(operation="report")`
-2. Check the "Worst Tools Fleet-Wide" table
-3. Fix docstrings: add Field(description=...) for missing params, behavioral warnings, usage guidance
-4. Keep docstrings 80-250 words, cover all 6 TDQS dimensions
-5. Make a new release, push to PyPI
-6. Click "Sync Server" on glama.ai admin page
-7. Run `glama_status(operation="refresh")` to update DB + create snapshot
-8. Verify score moved via dashboard or `glama_status(operation="deltas")`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Server health check |
+| GET | `/api/repos` | All repos with per-tool breakdowns |
+| GET | `/api/repos/{name}` | Single repo tool breakdown |
+| GET | `/api/worst-tools?limit=20` | Lowest-scoring tools fleet-wide |
+| POST | `/api/refresh` | Trigger rescrape + snapshot |
+| GET | `/api/history?limit=10` | Recent refresh log entries |
+| GET | `/api/report` | Full daily report JSON |
+| GET | `/api/deltas` | Score changes since last snapshot |
+| GET | `/api/reports/generate?repo_name=X` | Generate markdown reports |
+| GET | `/api/llm/providers` | Discovered LLM providers + models |
+| POST | `/api/chat` | LLM chat with history + system prompt |
+| POST | `/mcp` | MCP JSON-RPC transport |
 
-## Running
+## Database Schema (6 tables)
 
-```bash
-# MCP stdio mode
-just serve
+- `repos` -- Current per-repo scores, grades, coherence, maintenance
+- `tools` -- Per-tool TDQS dimension scores (6 dimensions)
+- `score_snapshots` -- One row per refresh run (uuid)
+- `score_history` -- Denormalized per-repo per-snapshot
+- `refresh_log` -- Timestamps and per-refresh success/failure counts
+- `fleet_repos` -- Tracked repos with author namespace
 
-# HTTP backend (port 11072)
-just web
+## LLM Integration
 
-# Web frontend dev (port 11073)
-just web-frontend
+Auto-discovers local LLM providers:
+- Ollama: probes `127.0.0.1:11434/api/tags`
+- LM Studio: probes `127.0.0.1:1234/v1/models`
+- OpenAI: via `OPENAI_API_KEY` + `OPENAI_BASE_URL` env vars
 
-# Full stack
-just web-dev
+Chat contract: `POST /api/chat` with `{message, model, base_url, provider,
+system_prompt, context: {history: [{role, content}]}}`.
 
-# Manual refresh + snapshot
-just refresh
+## Configuration
 
-# Lint
-just lint
+| File/Env | Purpose |
+|----------|---------|
+| `config/fleet-repos.json` | Tracked repos with author, slug, active flag |
+| `GLAMA_AUTHOR` | Default Glama namespace (default: sandraschi) |
+| `GLAMA_SCRAPE_TIMEOUT` | HTTP timeout per scrape (default: 30s) |
+| `GLAMA_SCRAPE_DELAY` | Delay between scrapes (default: 1.0s) |
+| `GLAMA_USE_BRIGHTDATA` | Set to `1` for BrightData proxy |
+| `GLAMA_BRIGHTDATA_TOKEN` | BrightData proxy auth token |
+| `OPENAI_API_KEY` | OpenAI API key for cloud LLM |
+| `OPENAI_BASE_URL` | OpenAI-compatible base URL |
+
+## Scoring (Glama TDQS)
+
+6 dimensions, weighted:
+- Purpose Clarity (25%)
+- Usage Guidelines (20%)
+- Behavioral Transparency (20%)
+- Parameter Semantics (15%)
+- Conciseness & Structure (10%)
+- Contextual Completeness (10%)
+
+Server score = 60% weighted mean + 40% minimum. Grades: A>=3.5, B>=3.0,
+C>=2.0, D>=1.0, F<1.0.
+
+## Environment Variables for Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "glama-status": {
+      "command": "uv",
+      "args": [
+        "--directory", "C:\\path\\to\\glama-status-mcp",
+        "run", "glama-status-mcp"
+      ],
+      "env": { "PYTHONUNBUFFERED": "1" }
+    }
+  }
+}
 ```
 
-## Environment Variables
+## Ports
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GLAMA_AUTHOR` | sandraschi | Glama author namespace |
-| `GLAMA_SCRAPE_TIMEOUT` | 30 | HTTP timeout per scrape |
-| `GLAMA_SCRAPE_DELAY` | 1.0 | Delay between scrapes (politeness) |
-| `GLAMA_USE_BRIGHTDATA` |  -  | Set "1" to route via BrightData proxy |
-| `GLAMA_BRIGHTDATA_TOKEN` |  -  | BrightData customer token |
+- Backend (FastAPI + MCP HTTP /mcp): 11072
+- Frontend (Vite dev): 11073
 
-## Database Schema
+## Docker (optional)
 
-### repos
-Current per-repo scores (overall grade, coherence, TDQS mean/min, maintenance, profile completion).
+No Docker image published. The server runs natively on Windows/macOS/Linux
+via Python 3.11+ and Node.js. Use `start.ps1` for one-click launch.
 
-### tools
-Per-tool scores with all 6 TDQS dimension ratings, linked to repos via repo_id.
+## Troubleshooting
 
-### score_snapshots
-One row per refresh run, uuid keyed.
+**"No scores yet" on dashboard**: Run `just refresh` or click Refresh Now
+to scrape Glama and populate the database.
 
-### score_history
-One row per repo per snapshot (denormalized for fast delta computation).
+**"No module named 'glama_status_mcp'"**: Run `uv sync --extra dev --extra web`
+from the repo root.
 
-### refresh_log
-Timestamps, counts, and errors from each refresh run.
+**LLM chat shows "no provider detected"**: Start Ollama (`ollama serve`) or
+LM Studio, or set `OPENAI_API_KEY` env var.
 
-### fleet_repos
-The 22 tracked repos with author namespace and active flag.
+**New repo not showing**: Add it via `glama_status(add_repo, repo_name="...")`
+or edit `config/fleet-repos.json`, then reload or restart.

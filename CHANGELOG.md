@@ -1,53 +1,51 @@
 # Changelog
 
-## v0.1.1 (2026-06-28)
+## v0.1.1 (2026-06-29)
+
+Beta release -- fleet standard webapp, LLM chat, agentic analysis, Tauri NSIS.
 
 ### Fixed
-- MCP HTTP transport now properly mounted at `/mcp` on FastAPI app
-- 57 ruff lint errors resolved (imports, line length, type annotations)
+- MCP HTTP transport properly mounted at `/mcp` on FastAPI app
+- 57 ruff lint errors resolved (imports, line length, type annotations, unused vars)
 - Grade regex hardened for lxml whitespace quirks
-- `start.ps1` no longer uses `cmd.exe /c` for Node.js
-- `justfile` no longer uses `cmd.exe /c`; refresh recipe uses `scripts/refresh.py`
-- `glama.json` includes `glama_daily_report` tool and `glama_improvement_plan` prompt
+- `start.ps1` ErrorAction/Out-Null pipeline fix for uv stderr
 - FastMCP `dependencies` kwarg removed (not supported in 3.4+)
+- Glama tool URLs corrected to `glama.ai/tools/{name}` (not `/mcp/tools/`)
+- TypeScript type conflicts resolved (shared `types.ts`)
 
 ### Added
+- **LLM integration**: Glom-On auto-discovery (Ollama 11434, LM Studio 1234, OpenAI)
+- **Chat page**: 4 personalities, provider/model selector, conversation history, export/clear
+- **Agentic MCP tool**: `glama_agentic_analyze` using `ctx.sample()` for LLM-powered score analysis
+- **Report generation**: `glama_generate_reports` writes per-repo markdown to `reports/`
+- **MCP prompt**: `glama_fleet_analysis_prompt` for fleet-wide LLM health analysis
+- **Prefab UI cards**: `show_glama_status_card` (fleet overview), `show_glama_repo_card` (per-repo)
+- **Configurable fleet**: `config/fleet-repos.json` for tracking any Glama author's repos
+- **Operations**: `add_repo`, `remove_repo`, `reload_config` in `glama_status` tool
+- **6-page webapp**: Dashboard, Report, Tools, Chat, Help, Settings
+- **Retractable sidebar**: collapse toggle, grade summary bar, integrated refresh
+- **Glama links**: every repo row and tool name links to glama.ai score/tool pages
+- **Hero section**: 3-column fleet health summary on Dashboard
+- **Tauri 2.0 NSIS installer**: 32.6 MB, embedded PyInstaller backend, single shortcut
+- **MCPB bundle**: 131 KB drag-and-drop for Claude Desktop
 - 35 backend tests (database, scraper, server API)
 - Playwright E2E test suite (`webapp/e2e/fleet-audit.spec.ts`)
-- Biome TypeScript linting config (`webapp/biome.json`)
-- MCPB manifest + 131KB `.mcpb` bundle (`dist/glama-status-mcp-v0.1.1.mcpb`)
-- Tauri 2.0 native wrapper with NSIS installer (32.6 MB, `native/`)
-- PyInstaller backend spec + `run_server.py` dual-transport entry point
-- Prefab UI cards: `show_glama_status_card`, `show_glama_repo_card`
-- Glama external links in repo table (score page) and tool breakdown (tool page)
-- Dedicated `scripts/refresh.py` for scheduled rescrapes
-- Retractable sidebar navigation with Dashboard/Help pages, grade summary, and collapse toggle
-- Topbar with breadcrumb view title, Report toggle, grade counts, and Refresh panel
+- Biome TypeScript linting config
+- `scripts/refresh.py` for scheduled rescrapes
+- `scripts/smoke.py` import verification
 
 ### Changed
-- Webapp updated to fleet standards: TailwindCSS v4, Lucide React, Zustand, Framer Motion
-- Switched from npm to Bun (`package-lock.json` removed; `bun.lock` expected)
-- `bg-gray-950` → `bg-zinc-950` (Zinc palette per fleet standard)
-- Animated transitions via Framer Motion (`AnimatePresence`)
-- Persistent state via Zustand store
-- `scripts/` debug files cleaned (15 removed, 1 rewrite)
+- Webapp: TailwindCSS v4, Lucide React, Zustand, Framer Motion
+- `bg-gray-950` -> `bg-zinc-950` (fleet Zinc palette)
+- All font contrast bumped (zinc-600->500, zinc-500->400)
+- Generic messaging: "your MCP fleet" (not sandraschi-specific)
+- Sidebar layout with persistent nav across all pages
+- README badges: FastMCP 3.4.2, 35 passed, ruff, TS strict, MIT, Tauri
+
+### Removed
+- 15 debug inspect scripts from `scripts/`
+- `package-lock.json` (switched to Bun)
 
 ## v0.1.0 (2026-06-28)
 
 Initial release.
-
-### Features
-- Scraper: fetches Glama score pages for 22 fleet repos, parses per-tool grades and all 6 TDQS dimensions (Purpose, Usage Guidelines, Behavior, Parameters, Conciseness, Completeness)
-- SQLite storage with schema for repos, tools, score snapshots, and refresh history
-- Delta tracking: snapshots created after each refresh, deltas computed between latest two
-- MCP tools: `glama_status` (list/get/worst_tools/refresh/history/staleness/report/deltas), `glama_scores_summary`, `glama_daily_report`
-- Web dashboard: Vite + React with sortable fleet table, per-tool dimension breakdown, refresh button, grade distribution
-- Polite scraping: descriptive UA, 1s delay, BrightData proxy fallback via env var
-- Staleness detection: repos with data >7 days flagged for rescan
-- Daily report: markdown format with grade distribution, score changes, worst tools, stale repos
-
-### Infrastructure
-- Ports: 11072 (backend), 11073 (frontend)
-- Fleet health registered in mcp-central-docs
-- justfile with install/serve/web/refresh/lint/smoke recipes
-- glama.json, llms.txt, llms-full.txt configured

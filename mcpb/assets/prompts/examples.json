@@ -1,0 +1,631 @@
+[
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "list"
+    },
+    "description": "List all repos worst-first"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "email-mcp"
+    },
+    "description": "Get full per-tool breakdown for email-mcp"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "blender-mcp"
+    },
+    "description": "Get blender-mcp scores (67 tools)"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "steam-mcp"
+    },
+    "description": "Get steam-mcp scores (14 tools)"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "virtualization-mcp"
+    },
+    "description": "Get virtualization-mcp scores"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 10
+    },
+    "description": "Top 10 worst-scoring tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 20
+    },
+    "description": "Top 20 worst-scoring tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 5
+    },
+    "description": "Top 5 worst-scoring tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools"
+    },
+    "description": "All worst tools (default limit 50)"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "refresh"
+    },
+    "description": "Rescrape all fleet repos and create snapshot"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "history"
+    },
+    "description": "Recent refresh log entries"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "history",
+      "limit": 5
+    },
+    "description": "Last 5 refresh log entries"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "staleness"
+    },
+    "description": "Find repos with data older than 7 days"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "report"
+    },
+    "description": "Full daily status report"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "deltas"
+    },
+    "description": "Score changes since last snapshot"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "add_repo",
+      "repo_name": "my-new-mcp"
+    },
+    "description": "Add a new repo to track"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "add_repo",
+      "repo_name": "other-mcp",
+      "author": "other-user"
+    },
+    "description": "Add repo from different author"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "remove_repo",
+      "repo_name": "old-repo"
+    },
+    "description": "Stop tracking a repo"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "reload_config"
+    },
+    "description": "Reload fleet-repos.json config file"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "email-mcp"
+    },
+    "description": "Get email-mcp scores"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "steam-mcp"
+    },
+    "description": "Get steam-mcp scores"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "bumi-mcp"
+    },
+    "description": "Get bumi-mcp scores"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "xkcd-mcp"
+    },
+    "description": "Get xkcd-mcp scores"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "cursor-mcp"
+    },
+    "description": "Get cursor-mcp scores"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "virtualization-mcp"
+    },
+    "description": "Get virtualization-mcp scores"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "blender-mcp"
+    },
+    "description": "Get blender-mcp scores"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 3
+    },
+    "description": "Worst 3 tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 5
+    },
+    "description": "Worst 5 tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 10
+    },
+    "description": "Worst 10 tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 15
+    },
+    "description": "Worst 15 tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 20
+    },
+    "description": "Worst 20 tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 25
+    },
+    "description": "Worst 25 tools fleet-wide"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 50
+    },
+    "description": "Worst 50 tools fleet-wide"
+  },
+  {
+    "tool": "glama_scores_summary",
+    "arguments": {},
+    "description": "Compact grade distribution summary"
+  },
+  {
+    "tool": "glama_daily_report",
+    "arguments": {},
+    "description": "Markdown daily report"
+  },
+  {
+    "tool": "glama_daily_report",
+    "arguments": {
+      "format": "markdown"
+    },
+    "description": "Markdown daily report"
+  },
+  {
+    "tool": "glama_daily_report",
+    "arguments": {
+      "format": "json"
+    },
+    "description": "JSON daily report"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "email-mcp"
+    },
+    "description": "LLM analysis of email-mcp"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "blender-mcp"
+    },
+    "description": "LLM analysis of blender-mcp (67 tools)"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "virtualization-mcp"
+    },
+    "description": "LLM analysis of virtualization-mcp"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "steam-mcp"
+    },
+    "description": "LLM analysis of steam-mcp"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {},
+    "description": "LLM analysis of entire fleet"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "worldlabs-mcp"
+    },
+    "description": "LLM analysis of worldlabs-mcp"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "windows-operations-mcp"
+    },
+    "description": "LLM analysis of windows-operations-mcp"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "robotics-mcp"
+    },
+    "description": "LLM analysis of robotics-mcp"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "xkcd-mcp"
+    },
+    "description": "LLM analysis of xkcd-mcp"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "cursor-mcp"
+    },
+    "description": "LLM analysis of cursor-mcp"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "bumi-mcp"
+    },
+    "description": "LLM analysis of bumi-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "email-mcp"
+    },
+    "description": "Generate report for email-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "blender-mcp"
+    },
+    "description": "Generate report for blender-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "steam-mcp"
+    },
+    "description": "Generate report for steam-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {},
+    "description": "Generate reports for all repos"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "virtualization-mcp"
+    },
+    "description": "Generate report for virtualization-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "windows-operations-mcp"
+    },
+    "description": "Generate report for windows-operations-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "worldlabs-mcp"
+    },
+    "description": "Generate report for worldlabs-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "robotics-mcp"
+    },
+    "description": "Generate report for robotics-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "xkcd-mcp"
+    },
+    "description": "Generate report for xkcd-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "cursor-mcp"
+    },
+    "description": "Generate report for cursor-mcp"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "bumi-mcp"
+    },
+    "description": "Generate report for bumi-mcp"
+  },
+  {
+    "tool": "show_glama_status_card",
+    "arguments": {},
+    "description": "Show fleet overview Prefab card"
+  },
+  {
+    "tool": "show_glama_repo_card",
+    "arguments": {
+      "repo_name": "email-mcp"
+    },
+    "description": "Show email-mcp Prefab card"
+  },
+  {
+    "tool": "show_glama_repo_card",
+    "arguments": {
+      "repo_name": "blender-mcp"
+    },
+    "description": "Show blender-mcp Prefab card"
+  },
+  {
+    "tool": "show_glama_repo_card",
+    "arguments": {
+      "repo_name": "steam-mcp"
+    },
+    "description": "Show steam-mcp Prefab card"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "email-mcp"
+    },
+    "description": "Inspect email-mcp before generating report"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "blender-mcp"
+    },
+    "description": "Inspect blender-mcp before generating report"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "steam-mcp"
+    },
+    "description": "Inspect steam-mcp before generating report"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "virtualization-mcp"
+    },
+    "description": "Inspect virtualization-mcp before generating report"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "list"
+    },
+    "description": "Quick check: list"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "report"
+    },
+    "description": "Quick check: report"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "deltas"
+    },
+    "description": "Quick check: deltas"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "staleness"
+    },
+    "description": "Quick check: staleness"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "add_repo",
+      "repo_name": "new-server"
+    },
+    "description": "Step 1: Add repo"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "refresh"
+    },
+    "description": "Step 2: Scrape after adding"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "new-server"
+    },
+    "description": "Step 3: Verify new repo data"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "report"
+    },
+    "description": "Step 1: Get fleet report"
+  },
+  {
+    "tool": "glama_daily_report",
+    "arguments": {},
+    "description": "Step 2: Markdown version for sharing"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {},
+    "description": "Step 3: Write per-repo reports to disk"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "refresh"
+    },
+    "description": "Step 1: Get fresh data"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "worst_tools",
+      "limit": 10
+    },
+    "description": "Step 2: Identify worst tools"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "blender-mcp"
+    },
+    "description": "Step 3: LLM analysis of worst repo"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "blender-mcp"
+    },
+    "description": "Step 4: Write fix plan"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "list"
+    },
+    "description": "Morning: check all repos"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "staleness"
+    },
+    "description": "Morning: flag stale repos"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "report"
+    },
+    "description": "Morning: full status report"
+  },
+  {
+    "tool": "glama_status",
+    "arguments": {
+      "operation": "get",
+      "repo_name": "nonexistent"
+    },
+    "description": "Get nonexistent repo (returns error)"
+  },
+  {
+    "tool": "glama_agentic_analyze",
+    "arguments": {
+      "repo_name": "nonexistent"
+    },
+    "description": "Analyze nonexistent repo (returns error)"
+  },
+  {
+    "tool": "glama_generate_reports",
+    "arguments": {
+      "repo_name": "nonexistent"
+    },
+    "description": "Generate report for nonexistent repo"
+  }
+]
