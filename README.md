@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-ffc131)](https://tauri.app)
 
-Daily-refreshed Glama score tracker for the sandraschi fleet. Scrapes per-tool
+Daily-refreshed Glama score tracker for the MCP fleet. Scrapes per-tool
 TDQS grades from glama.ai, stores in SQLite with snapshot history, surfaces via
 MCP tools and a Vite/React web dashboard.
 

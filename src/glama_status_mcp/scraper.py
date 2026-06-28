@@ -7,7 +7,7 @@ from glama_status_mcp.config import GLAMA_BASE, SCRAPE_TIMEOUT
 from glama_status_mcp.models import RepoScore, ToolScore
 
 _USER_AGENT = (
-    "glama-status-mcp/0.1 (sandraschi fleet; daily score scrape)"
+    "glama-status-mcp/0.1 (MCP fleet score tracker; Daily score scrape)"
 )
 
 

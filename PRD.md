@@ -10,7 +10,7 @@
 
 ## 1. Problem
 
-Glama.ai provides per-tool TDQS grading for MCP servers, but there is no aggregate view across the entire sandraschi fleet. Scores must be checked individually on glama.ai per repo. There is no way to:
+Glama.ai provides per-tool TDQS grading for MCP servers, but there is no aggregate view across the entire MCP fleet. Scores must be checked individually on glama.ai per repo. There is no way to:
 
 - See which repos have the worst scores at a glance
 - Track score changes over time
