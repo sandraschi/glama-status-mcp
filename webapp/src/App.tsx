@@ -59,7 +59,7 @@ export default function App() {
               Glama Status
             </h1>
             <p className="text-sm text-gray-500">
-              Fleet score dashboard — {repos.length} repos tracked
+              Fleet score dashboard  -  {repos.length} repos tracked
             </p>
           </div>
           <div className="flex items-center gap-4 text-sm">

@@ -29,7 +29,7 @@ async def glama_status(
     limit: int = 50,
     ctx: Optional[Context] = None,
 ) -> dict:
-    """Fleet-wide Glama score tracker — query per-tool TDQS grades, identify worst-scoring tools, trigger rescans.
+    """Fleet-wide Glama score tracker  -  query per-tool TDQS grades, identify worst-scoring tools, trigger rescans.
 
     When to use: call this to check the health of any fleet repo's Glama score, find which tools need docstring fixes, or trigger a refresh.
     When NOT to use: for code-level diagnostics use the repo's own tools; for Glama submission/review use glama.ai directly.
@@ -41,7 +41,7 @@ async def glama_status(
     - worst_tools: Return the lowest-scoring tools across the fleet. Use limit to control count.
     - refresh:     Immediately rescrape all fleet repos from Glama and update the database.
     - history:     Return recent refresh log entries.
-    - staleness:   Return repos whose Glama data is >7 days old — they need a release + rescan.
+    - staleness:   Return repos whose Glama data is >7 days old  -  they need a release + rescan.
     - report:      Return a full daily status report with grade distribution, deltas, worst tools, and stale repos.
     - deltas:      Return score changes between the last two snapshots only.
 
@@ -212,7 +212,7 @@ async def _do_refresh(ctx: Optional[Context] = None) -> dict:
 
 @mcp.tool(annotations=_README_ONLY)
 async def glama_scores_summary() -> dict:
-    """Return a compact fleet-wide score summary — grades per repo and count per grade bucket.
+    """Return a compact fleet-wide score summary  -  grades per repo and count per grade bucket.
 
     Args: None.
 
@@ -372,7 +372,7 @@ def glama_improvement_plan(repo_name: str) -> str:
             f"Conciseness={t.get('conciseness', '?')}",
             f"Completeness={t.get('completeness', '?')}",
         ]
-        lines.append(f"- **{t.get('name')}** ({t.get('grade', '?')}, {t.get('score', '?')}/5) — {' | '.join(dims)}")
+        lines.append(f"- **{t.get('name')}** ({t.get('grade', '?')}, {t.get('score', '?')}/5)  -  {' | '.join(dims)}")
     lines.extend([
         "",
         "### Fix plan",

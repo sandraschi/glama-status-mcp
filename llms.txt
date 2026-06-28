@@ -4,9 +4,9 @@ Daily-refreshed Glama score tracker for the sandraschi fleet. Scrapes per-tool T
 
 ## Tools
 
-- `glama_status` — Portmanteau: list (all repos), get (one repo, per-tool breakdown), worst_tools (lowest scoring tools), refresh (rescrape all + snapshot), history (refresh log), staleness (>7d stale), report (full daily report), deltas (score changes).
-- `glama_scores_summary` — Compact fleet-wide score summary with grade distribution.
-- `glama_daily_report` — Full markdown daily report: grade table, score deltas, worst tools, stale repos.
+- `glama_status`  -  Portmanteau: list (all repos), get (one repo, per-tool breakdown), worst_tools (lowest scoring tools), refresh (rescrape all + snapshot), history (refresh log), staleness (>7d stale), report (full daily report), deltas (score changes).
+- `glama_scores_summary`  -  Compact fleet-wide score summary with grade distribution.
+- `glama_daily_report`  -  Full markdown daily report: grade table, score deltas, worst tools, stale repos.
 
 ## Ports
 

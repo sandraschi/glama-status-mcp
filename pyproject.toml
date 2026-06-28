@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "glama-status-mcp"
 version = "0.1.0"
-description = "Daily-refreshed Glama score tracker for the fleet — scrapes per-tool TDQS grades, stores in SQLite, surfaces via MCP tools and a web dashboard."
+description = "Daily-refreshed Glama score tracker for the fleet  -  scrapes per-tool TDQS grades, stores in SQLite, surfaces via MCP tools and a web dashboard."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

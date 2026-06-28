@@ -109,12 +109,12 @@ export default function ToolBreakdown({ repoName, onBack }: Props) {
             <h2 className="text-lg font-bold">{repo.name}</h2>
             <p className="text-sm text-gray-500">
               Last scraped: {repo.last_scraped ? new Date(repo.last_scraped).toLocaleString() : "never"}
-              &middot; Release: {repo.latest_release || "—"}
+              &middot; Release: {repo.latest_release || " - "}
             </p>
           </div>
           <div className="text-right">
             <span className={`text-2xl font-bold ${gradeColor(repo.overall_grade)}`}>
-              {repo.overall_grade || "—"}
+              {repo.overall_grade || " - "}
             </span>
             <span className="text-gray-500 text-sm ml-1">
               {repo.overall_score?.toFixed(2)}
@@ -126,7 +126,7 @@ export default function ToolBreakdown({ repoName, onBack }: Props) {
           <div>
             <span className="text-gray-500">TDQS</span>
             <span className={`ml-2 font-medium ${gradeColor(repo.tdqs_grade)}`}>
-              {repo.tdqs_grade || "—"}
+              {repo.tdqs_grade || " - "}
             </span>
             <div className="text-xs text-gray-600">
               μ={repo.tdqs_mean?.toFixed(2)} min={repo.tdqs_min?.toFixed(2)}
@@ -135,7 +135,7 @@ export default function ToolBreakdown({ repoName, onBack }: Props) {
           <div>
             <span className="text-gray-500">Coherence</span>
             <span className={`ml-2 font-medium ${gradeColor(repo.coherence_grade)}`}>
-              {repo.coherence_grade || "—"}
+              {repo.coherence_grade || " - "}
             </span>
             <div className="text-xs text-gray-600">
               D={repo.coherence_disambiguation?.toFixed(1)} N={repo.coherence_naming?.toFixed(1)}
@@ -145,7 +145,7 @@ export default function ToolBreakdown({ repoName, onBack }: Props) {
           <div>
             <span className="text-gray-500">Maintenance</span>
             <span className={`ml-2 font-medium ${gradeColor(repo.maintenance_grade)}`}>
-              {repo.maintenance_grade || "—"}
+              {repo.maintenance_grade || " - "}
             </span>
           </div>
           <div>
@@ -222,9 +222,9 @@ export default function ToolBreakdown({ repoName, onBack }: Props) {
           <p className="text-blue-200/70 text-xs">
             The lowest-scoring tool ({sortedTools[0]?.name}, {sortedTools[0]?.score?.toFixed(1)}/5)
             pulls down the entire server (60% mean + 40% minimum weighting).
-            Fix its docstrings — add missing parameter descriptions via{" "}
+            Fix its docstrings  -  add missing parameter descriptions via{" "}
             <code className="text-blue-300">Field(description=...)</code>,
-            behavioral warnings for destructive ops, and usage guidance —
+            behavioral warnings for destructive ops, and usage guidance  - 
             then make a release and trigger Sync Server on glama.ai.
           </p>
         </div>

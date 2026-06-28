@@ -163,22 +163,22 @@ export default function ScoreTable({ repos, onSelectRepo }: Props) {
                 >
                   <td className="py-3 px-2 font-medium">{repo.name}</td>
                   <td className={`py-3 px-2 text-center font-bold ${gradeColor(repo.overall_grade)}`}>
-                    {repo.overall_grade || "—"}
+                    {repo.overall_grade || " - "}
                   </td>
                   <td className="py-3 px-2 text-center">
-                    {repo.overall_score != null ? repo.overall_score.toFixed(2) : "—"}
+                    {repo.overall_score != null ? repo.overall_score.toFixed(2) : " - "}
                   </td>
                   <td className="py-3 px-2 text-center text-gray-400">
-                    {repo.tdqs_mean != null ? repo.tdqs_mean.toFixed(2) : "—"}
+                    {repo.tdqs_mean != null ? repo.tdqs_mean.toFixed(2) : " - "}
                   </td>
                   <td className="py-3 px-2 text-center text-gray-400">
-                    {repo.tdqs_min != null ? repo.tdqs_min.toFixed(2) : "—"}
+                    {repo.tdqs_min != null ? repo.tdqs_min.toFixed(2) : " - "}
                   </td>
                   <td className={`py-3 px-2 text-center ${gradeColor(repo.coherence_grade)}`}>
-                    {repo.coherence_grade || "—"}
+                    {repo.coherence_grade || " - "}
                   </td>
                   <td className={`py-3 px-2 text-center ${gradeColor(repo.maintenance_grade)}`}>
-                    {repo.maintenance_grade || "—"}
+                    {repo.maintenance_grade || " - "}
                   </td>
                   <td className="py-3 px-2 text-center text-gray-400">
                     {repo.tools?.length || 0}
@@ -202,7 +202,7 @@ export default function ScoreTable({ repos, onSelectRepo }: Props) {
                     </div>
                   </td>
                   <td className="py-3 px-2 text-center text-xs text-gray-500">
-                    {repo.latest_release || "—"}
+                    {repo.latest_release || " - "}
                   </td>
                   <td className="py-3 px-2 text-center">
                     {stale >= 0 ? (
@@ -210,7 +210,7 @@ export default function ScoreTable({ repos, onSelectRepo }: Props) {
                         {stale}d
                       </span>
                     ) : (
-                      <span className="text-gray-600">—</span>
+                      <span className="text-gray-600"> - </span>
                     )}
                   </td>
                 </tr>

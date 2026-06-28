@@ -55,7 +55,7 @@ just refresh      # Manual scrape + snapshot
 | Conciseness & Structure | 10% | Not a wall of text, not a one-liner |
 | Contextual Completeness | 10% | Enough context to use without reading source |
 
-Server-level = 60% mean + 40% minimum — one bad tool pulls the whole score down.
+Server-level = 60% mean + 40% minimum  -  one bad tool pulls the whole score down.
 
 ## Ports
 

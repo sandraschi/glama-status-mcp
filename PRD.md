@@ -1,10 +1,10 @@
-# PRD — glama-status-mcp
+# PRD  -  glama-status-mcp
 
 **Product Requirements Document**
 **Version:** 0.1
 **Date:** 2026-06-28
 **Owner:** sandraschi
-**Status:** v0.1.0 — initial release
+**Status:** v0.1.0  -  initial release
 
 ---
 
@@ -35,9 +35,9 @@ glama-status-mcp is a daily-refreshed Glama score tracker that:
 ## 4. Features
 
 ### 4.1 MCP Tools
-- `glama_status` — portmanteau: list, get, worst_tools, refresh, history, staleness, report, deltas
-- `glama_scores_summary` — grade distribution and per-repo fast stats
-- `glama_daily_report` — full markdown report with deltas, tables, worst tools
+- `glama_status`  -  portmanteau: list, get, worst_tools, refresh, history, staleness, report, deltas
+- `glama_scores_summary`  -  grade distribution and per-repo fast stats
+- `glama_daily_report`  -  full markdown report with deltas, tables, worst tools
 
 ### 4.2 Web Dashboard
 - Sortable fleet table (by grade, score, staleness)

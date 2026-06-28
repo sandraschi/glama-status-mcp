@@ -73,38 +73,56 @@ def _parse_html(html: str, name: str, namespace: str) -> RepoScore:
         if m:
             score.latest_release = m.group(0)
 
-    # Server Coherence — sub-scores appear in checklist items near the top
-    for label, attr in [
-        ("Disambiguation", "disambiguation"),
-        ("Naming Consistency", "naming_consistency"),
-        ("Tool Count", "tool_count"),
-        ("Completeness", "completeness"),
-    ]:
-        el = soup.find(string=re.compile(f"^{re.escape(label)}"))
-        if el:
-            container = el.parent
-            if container:
-                val = _parse_score(container.get_text(strip=True))
-                if val > 0:
-                    setattr(score.coherence, attr, val)
-            # Walk up to find grade
-            parent_section = el.find_parent(["div", "section", "li"])
-            if parent_section and not score.coherence.grade:
-                g = _parse_grade(parent_section.get_text(strip=True))
-                if g:
-                    score.coherence.grade = g
+    # Grade badges  -  use the specific badge span class
+    for badge in soup.find_all("span", class_=lambda c: c and "kIIaya" in str(c)):
+        badge_text = badge.get_text(strip=True)
+        if badge_text not in ("A", "B", "C", "D", "F"):
+            continue
+        # Find the label text that appears before this badge
+        parent = badge.parent
+        if parent:
+            ptext = parent.get_text(strip=True)
+            if ptext.startswith("Server Coherence") or "Server Coherence" in ptext:
+                score.coherence.grade = badge_text
+            elif ptext.startswith("Maintenance") or "Maintenance" in ptext:
+                score.maintenance_grade = badge_text
+            elif ptext.startswith("Tool Definition Quality") or "Tool Definition Quality" in ptext:
+                score.tdqs_grade = badge_text
 
-    # TDQS — "Average3.5/5 across9of9tools scored.Lowest: 2.4/5." (no space after Average)
-    tdqs_p = soup.find("p", string=re.compile(r'Average'))
-    if tdqs_p:
-        txt = tdqs_p.get_text(strip=True)
-        m_mean = re.search(r'Average([\d.]+)/5', txt)
-        if m_mean:
-            score.tdqs_mean = float(m_mean.group(1))
-        m_min = re.search(r'Lowest:\s*([\d.]+)/5', txt)
-        if m_min:
-            score.tdqs_min = float(m_min.group(1))
-            if score.tdqs_mean:
+    # Server Coherence sub-scores
+    coherence_labels = {"Disambiguation", "Naming Consistency", "Tool Count", "Completeness"}
+    for span in soup.find_all("span", class_=lambda c: c and "czikZZ" in str(c)):
+        st = span.get_text(strip=True)
+        m = re.search(r'^(\d+(?:\.\d+)?)\s*/\s*5$', st)
+        if not m:
+            continue
+        parent = span.parent
+        if not parent:
+            continue
+        parent_text = parent.get_text(strip=True)
+        for label in coherence_labels:
+            if label in parent_text:
+                val = float(m.group(1))
+                attr_map = {
+                    "Disambiguation": "disambiguation",
+                    "Naming Consistency": "naming_consistency",
+                    "Tool Count": "tool_count",
+                    "Completeness": "completeness",
+                }
+                setattr(score.coherence, attr_map[label], val)
+                break
+
+    # TDQS  -  find element containing both "Average" and "Lowest"
+    for el in soup.find_all(["p", "div", "span"]):
+        txt = el.get_text(strip=True)
+        if "Average" in txt and "Lowest" in txt:
+            m_mean = re.search(r'Average\s*([\d.]+)\s*/?\s*5', txt)
+            m_min = re.search(r'Lowest:\s*([\d.]+)\s*/?\s*5', txt)
+            if m_mean:
+                score.tdqs_mean = float(m_mean.group(1))
+            if m_min:
+                score.tdqs_min = float(m_min.group(1))
+            if score.tdqs_mean and score.tdqs_min:
                 overall = 0.6 * score.tdqs_mean + 0.4 * score.tdqs_min
                 score.overall_score = round(overall, 2)
                 score.overall_grade = (
@@ -113,16 +131,9 @@ def _parse_html(html: str, name: str, namespace: str) -> RepoScore:
                     "C" if overall >= 2.0 else
                     "D" if overall >= 1.0 else "F"
                 )
-        score.tdqs_grade = _parse_grade(txt)
+            break
 
-    # Maintenance — find the grade letter near label
-    maint_span = soup.find("span", string=re.compile(r'^Maintenance$'))
-    if maint_span:
-        container = maint_span.parent
-        if container:
-            score.maintenance_grade = _parse_grade(container.get_text(strip=True))
-
-    # Per-tool cards — each tool is a <button> with a /tools/ link
+    # Per-tool cards  -  each tool is a <button> with a /tools/ link
     for btn in soup.find_all("button"):
         classes = " ".join(btn.get("class", []))
         if "ULqjq" not in classes:

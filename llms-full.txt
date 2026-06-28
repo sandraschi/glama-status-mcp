@@ -40,14 +40,14 @@ Portmanteau tool for all Glama status operations.
 
 | Operation | Description | Required params |
 |-----------|-------------|-----------------|
-| `list` | All repos with grades, worst-first | — |
+| `list` | All repos with grades, worst-first |  -  |
 | `get` | Per-tool breakdown for one repo | `repo_name` |
 | `worst_tools` | Lowest-scoring tools across fleet | `limit` (optional) |
-| `refresh` | Rescrape all 22 repos + snapshot | — |
+| `refresh` | Rescrape all 22 repos + snapshot |  -  |
 | `history` | Recent refresh log entries | `limit` (optional) |
-| `staleness` | Repos with data >7 days old | — |
-| `report` | Full daily status report | — |
-| `deltas` | Score changes since last snapshot | — |
+| `staleness` | Repos with data >7 days old |  -  |
+| `report` | Full daily status report |  -  |
+| `deltas` | Score changes since last snapshot |  -  |
 
 ### glama_scores_summary
 
@@ -117,8 +117,8 @@ just lint
 | `GLAMA_AUTHOR` | sandraschi | Glama author namespace |
 | `GLAMA_SCRAPE_TIMEOUT` | 30 | HTTP timeout per scrape |
 | `GLAMA_SCRAPE_DELAY` | 1.0 | Delay between scrapes (politeness) |
-| `GLAMA_USE_BRIGHTDATA` | — | Set "1" to route via BrightData proxy |
-| `GLAMA_BRIGHTDATA_TOKEN` | — | BrightData customer token |
+| `GLAMA_USE_BRIGHTDATA` |  -  | Set "1" to route via BrightData proxy |
+| `GLAMA_BRIGHTDATA_TOKEN` |  -  | BrightData customer token |
 
 ## Database Schema
 
