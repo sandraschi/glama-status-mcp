@@ -1,0 +1,13 @@
+{
+  "name": "glama-status-mcp",
+  "description": "Daily-refreshed Glama score tracker for the sandraschi fleet. Scrapes per-tool TDQS grades from glama.ai, stores in SQLite, surfaces via MCP tools and a web dashboard. Sorted worst-first so the lowest-scoring tools are always visible.",
+  "version": "0.1.0",
+  "author": "sandraschi",
+  "license": "MIT",
+  "homepage": "https://github.com/sandraschi/glama-status-mcp",
+  "keywords": ["glama", "scoring", "tdqs", "fleet", "dashboard", "mcp", "quality", "docstrings"],
+  "tools": [
+    "glama_status",
+    "glama_scores_summary"
+  ]
+}

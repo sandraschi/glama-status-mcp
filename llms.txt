@@ -1,0 +1,19 @@
+# glama-status-mcp
+
+Daily-refreshed Glama score tracker for the sandraschi fleet. Scrapes per-tool TDQS grades from glama.ai, stores in SQLite with snapshot history, surfaces via MCP tools and a Vite/React web dashboard.
+
+## Tools
+
+- `glama_status` — Portmanteau: list (all repos), get (one repo, per-tool breakdown), worst_tools (lowest scoring tools), refresh (rescrape all + snapshot), history (refresh log), staleness (>7d stale), report (full daily report), deltas (score changes).
+- `glama_scores_summary` — Compact fleet-wide score summary with grade distribution.
+- `glama_daily_report` — Full markdown daily report: grade table, score deltas, worst tools, stale repos.
+
+## Ports
+
+- Backend: 11072
+- Frontend: 11073
+
+## Links
+
+- Fleet dashboard: http://127.0.0.1:11073
+- Glama profile: https://glama.ai/mcp/servers?query=author%3Asandraschi

@@ -1,0 +1,141 @@
+# glama-status-mcp
+
+A daily-refreshed Glama score tracker for the sandraschi fleet of MCP servers. Scrapes per-tool TDQS (Tool Definition Quality Score) grades from glama.ai, stores data in SQLite with snapshot history for delta tracking, and surfaces it via MCP tools and a Vite/React web dashboard.
+
+## Architecture
+
+```
+glama-status-mcp/
+├── src/glama_status_mcp/
+│   ├── server.py        # FastMCP server: 3 tools + FastAPI HTTP mode
+│   ├── scraper.py       # Async HTML scraper for glama.ai score pages
+│   ├── database.py      # SQLite storage (repos, tools, snapshots, history)
+│   ├── models.py        # Pydantic models + 22 fleet repo list
+│   └── config.py        # Paths, constants, env vars
+├── webapp/              # Vite + React dashboard
+│   ├── src/
+│   │   ├── App.tsx
+│   │   └── components/
+│   │       ├── ScoreTable.tsx    # Sortable fleet-wide table
+│   │       ├── ToolBreakdown.tsx # Per-tool dimension bars
+│   │       └── RefreshPanel.tsx  # Manual refresh trigger
+│   └── vite.config.ts
+├── data/                # SQLite database (gitignored)
+├── tests/
+├── scripts/
+│   └── inspect_glama_page*.py  # Debug scrapers
+├── PRD.md
+├── CHANGELOG.md
+├── justfile
+├── glama.json
+├── llms.txt
+└── llms-full.txt
+```
+
+## MCP Tools
+
+### glama_status
+
+Portmanteau tool for all Glama status operations.
+
+| Operation | Description | Required params |
+|-----------|-------------|-----------------|
+| `list` | All repos with grades, worst-first | — |
+| `get` | Per-tool breakdown for one repo | `repo_name` |
+| `worst_tools` | Lowest-scoring tools across fleet | `limit` (optional) |
+| `refresh` | Rescrape all 22 repos + snapshot | — |
+| `history` | Recent refresh log entries | `limit` (optional) |
+| `staleness` | Repos with data >7 days old | — |
+| `report` | Full daily status report | — |
+| `deltas` | Score changes since last snapshot | — |
+
+### glama_scores_summary
+
+Compact summary: grade distribution count (A/B/C/D/F/none) and per-repo fast stats.
+
+### glama_daily_report
+
+Generates a full markdown report including:
+- Grade distribution table
+- Score changes since last snapshot (deltas with ▲/▼ arrows)
+- All repos table sorted worst-first
+- Worst tools fleet-wide
+- Stale repos needing release + rescan
+
+## TDQS Scoring (Glama)
+
+Server-level TDQS = 60% mean + 40% minimum across all tools.
+
+| Dimension | Weight | What it checks |
+|-----------|--------|----------------|
+| Purpose Clarity | 25% | First sentence states what the tool does |
+| Usage Guidelines | 20% | When to / not to call, preconditions |
+| Behavioral Transparency | 20% | Returns, side effects, error conditions |
+| Parameter Semantics | 15% | Every param: type, values, what it affects |
+| Conciseness & Structure | 10% | Not a wall of text, not a one-liner |
+| Contextual Completeness | 10% | Enough context to use without reading source |
+
+Grade thresholds: A ≥ 3.5, B ≥ 3.0, C ≥ 2.0, D ≥ 1.0, F < 1.0
+
+## Fleet Improvement Workflow
+
+1. Run `glama_daily_report()` or `glama_status(operation="report")`
+2. Check the "Worst Tools Fleet-Wide" table
+3. Fix docstrings: add Field(description=...) for missing params, behavioral warnings, usage guidance
+4. Keep docstrings 80-250 words, cover all 6 TDQS dimensions
+5. Make a new release, push to PyPI
+6. Click "Sync Server" on glama.ai admin page
+7. Run `glama_status(operation="refresh")` to update DB + create snapshot
+8. Verify score moved via dashboard or `glama_status(operation="deltas")`
+
+## Running
+
+```bash
+# MCP stdio mode
+just serve
+
+# HTTP backend (port 11072)
+just web
+
+# Web frontend dev (port 11073)
+just web-frontend
+
+# Full stack
+just web-dev
+
+# Manual refresh + snapshot
+just refresh
+
+# Lint
+just lint
+```
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GLAMA_AUTHOR` | sandraschi | Glama author namespace |
+| `GLAMA_SCRAPE_TIMEOUT` | 30 | HTTP timeout per scrape |
+| `GLAMA_SCRAPE_DELAY` | 1.0 | Delay between scrapes (politeness) |
+| `GLAMA_USE_BRIGHTDATA` | — | Set "1" to route via BrightData proxy |
+| `GLAMA_BRIGHTDATA_TOKEN` | — | BrightData customer token |
+
+## Database Schema
+
+### repos
+Current per-repo scores (overall grade, coherence, TDQS mean/min, maintenance, profile completion).
+
+### tools
+Per-tool scores with all 6 TDQS dimension ratings, linked to repos via repo_id.
+
+### score_snapshots
+One row per refresh run, uuid keyed.
+
+### score_history
+One row per repo per snapshot (denormalized for fast delta computation).
+
+### refresh_log
+Timestamps, counts, and errors from each refresh run.
+
+### fleet_repos
+The 22 tracked repos with author namespace and active flag.
