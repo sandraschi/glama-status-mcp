@@ -4,7 +4,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from glama_status_mcp.config import GLAMA_BASE, SCRAPE_TIMEOUT
-from glama_status_mcp.models import RepoScore, ToolScore
+from glama_status_mcp.models import FleetRepo, RepoScore, ToolScore
 
 _USER_AGENT = (
     "glama-status-mcp/0.1 (MCP fleet score tracker; Daily score scrape)"
@@ -189,3 +189,42 @@ def _parse_html(html: str, name: str, namespace: str) -> RepoScore:
             )
 
     return score
+
+
+async def discover_repos(author: str = "sandraschi") -> list[FleetRepo]:
+    """Scrape the Glama author page to find all registered MCP servers.
+
+    Fetches https://glama.ai/mcp/servers?query=author%3A{author}
+    and extracts repo names from the server card links.
+    """
+    url = f"{GLAMA_BASE}?query=author%3A{author}"
+    headers = {"User-Agent": _USER_AGENT, "Accept": "text/html"}
+
+    async with httpx.AsyncClient(
+        timeout=SCRAPE_TIMEOUT, follow_redirects=True
+    ) as client:
+        try:
+            resp = await client.get(url, headers=headers)
+            resp.raise_for_status()
+        except Exception:
+            return []
+
+    soup = BeautifulSoup(resp.text, "lxml")
+    repos: list[FleetRepo] = []
+    seen: set[str] = set()
+
+    # Server cards link to /mcp/servers/{author}/{repo}
+    for a_tag in soup.find_all(
+        "a", href=re.compile(rf"/mcp/servers/{re.escape(author)}/[^/]+/?$")
+    ):
+        href = a_tag.get("href", "")
+        parts = href.rstrip("/").split("/")
+        if len(parts) >= 4:
+            name = parts[-1]
+            if name and name not in seen:
+                seen.add(name)
+                repos.append(
+                    FleetRepo(name=name, glama_author=author)
+                )
+
+    return repos

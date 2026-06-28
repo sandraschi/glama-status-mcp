@@ -191,6 +191,7 @@ def get_all_repo_scores() -> list[dict]:
         result.append({
             "id": r["id"],
             "name": r["name"],
+            "glama_namespace": r["glama_namespace"],
             "overall_grade": r["overall_grade"],
             "overall_score": r["overall_score"],
             "tdqs_grade": r["tdqs_grade"],

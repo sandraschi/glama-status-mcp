@@ -30,7 +30,7 @@ _READ_ONLY = {"readonly": True}
 _MUTATING: dict[str, bool] = {}
 
 _OP_LIST = ("list, get, worst_tools, refresh, history, staleness, "
-             "report, deltas, add_repo, remove_repo, reload_config")
+             "report, deltas, add_repo, remove_repo, reload_config, discover")
 
 
 @mcp.tool(annotations=_MUTATING)
@@ -61,6 +61,7 @@ async def glama_status(
     - add_repo:  Add a repo to track (name, optional author/slug).
     - remove_repo:  Stop tracking a repo.
     - reload_config:  Reload fleet-repos.json config file.
+    - discover:  Find all MCP repos for an author on Glama.
 
     Args:
         operation: One of: list, get, worst_tools, refresh, history,
@@ -75,12 +76,22 @@ async def glama_status(
     """
     if operation == "list":
         repos = get_all_repo_scores()
+        offset = max(0, limit if limit > 0 else 0)
+        page_size = min(50, max(1, abs(limit) if limit != 50 else 50))
+        total = len(repos)
+        if limit < 0:
+            offset = 0
+            page_size = total
+        page = repos[offset:offset + page_size]
         return {
             "success": True,
             "operation": operation,
-            "data": repos,
-            "count": len(repos),
-            "message": f"Found {len(repos)} repos with Glama scores.",
+            "data": page,
+            "count": len(page),
+            "total": total,
+            "offset": offset,
+            "limit": page_size,
+            "message": f"Found {total} repos ({len(page)} shown).",
         }
 
     if operation == "get":
@@ -213,6 +224,29 @@ async def glama_status(
             "operation": operation,
             "data": {"count": len(_FR)},
             "message": f"Reloaded config: {len(_FR)} repos tracked.",
+        }
+
+    if operation == "discover":
+        from glama_status_mcp.models import DEFAULT_AUTHOR
+        from glama_status_mcp.models import add_repo as _add
+        from glama_status_mcp.scraper import discover_repos
+        found = await discover_repos(DEFAULT_AUTHOR)
+        added = 0
+        for r in found:
+            _add(name=r.name, author=r.glama_author)
+            added += 1
+        return {
+            "success": True,
+            "operation": operation,
+            "data": {
+                "found": len(found),
+                "added": added,
+                "author": DEFAULT_AUTHOR,
+            },
+            "message": (
+                f"Discovered {len(found)} repos for {DEFAULT_AUTHOR}. "
+                f"{added} added to fleet."
+            ),
         }
 
     return {
@@ -805,8 +839,15 @@ def main():
             return {"status": "ok", "service": "glama-status-mcp"}
 
         @app.get("/api/repos")
-        async def api_repos():
-            return get_all_repo_scores()
+        async def api_repos(limit: int = 0, offset: int = 0):
+            repos = get_all_repo_scores()
+            total = len(repos)
+            if limit > 0:
+                repos = repos[offset:offset + limit]
+            elif limit < 0:
+                pass  # return all
+            return {"repos": repos, "total": total, "offset": offset,
+                    "limit": limit if limit else total}
 
         @app.get("/api/repos/{name}")
         async def api_repo(name: str):

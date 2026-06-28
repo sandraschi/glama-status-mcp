@@ -201,7 +201,7 @@ export default function ToolBreakdown({ repoName, onBack }: Props) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <a
-                    href={`https://glama.ai/tools/${encodeURIComponent(tool.name)}`}
+                    href={`https://glama.ai/mcp/servers/${ghAccount()}/${repoName}/tools/${encodeURIComponent(tool.name)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-sm text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1"

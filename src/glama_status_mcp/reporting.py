@@ -48,8 +48,13 @@ def generate_repo_report(repo_name: str) -> str:
     ]
 
     for i, t in enumerate(tools, 1):
+        ns = repo.get("glama_namespace", "sandraschi")
+        tool_url = (
+            f"https://glama.ai/mcp/servers/{ns}"
+            f"/{repo_name}/tools/{t.get('name')}"
+        )
         lines.append(
-            f"| {i} | [{t.get('name')}](https://glama.ai/tools/{t.get('name')}) "
+            f"| {i} | [{t.get('name')}]({tool_url}) "
             f"| {t.get('grade', '?')} | {t.get('score', 0):.1f} "
             f"| {t.get('purpose', 0):.1f} | {t.get('usage_guidelines', 0):.1f} "
             f"| {t.get('behavior', 0):.1f} | {t.get('parameters', 0):.1f} "

@@ -65,19 +65,8 @@ class FleetRepo(BaseModel):
 
 
 def _default_fleet() -> list[FleetRepo]:
-    """Default demo fleet -- example MCP servers with Glama scores."""
-    return [
-        FleetRepo(name="virtualization-mcp"),
-        FleetRepo(name="bumi-mcp"),
-        FleetRepo(name="blender-mcp"),
-        FleetRepo(name="windows-operations-mcp"),
-        FleetRepo(name="worldlabs-mcp"),
-        FleetRepo(name="robotics-mcp"),
-        FleetRepo(name="xkcd-mcp"),
-        FleetRepo(name="cursor-mcp"),
-        FleetRepo(name="steam-mcp"),
-        FleetRepo(name="email-mcp"),
-    ]
+    """Empty default. Run discover to populate from Glama."""
+    return []
 
 
 def load_fleet_repos() -> list[FleetRepo]:

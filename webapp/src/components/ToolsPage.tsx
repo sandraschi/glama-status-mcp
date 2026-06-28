@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Wrench, ExternalLink } from "lucide-react";
 
+function ghAccount(): string {
+  try { return localStorage.getItem("glama-status-gh-account") || "sandraschi"; } catch { return "sandraschi"; }
+}
+
 interface WorstTool {
   tool_name: string;
   repo_name: string;
@@ -131,7 +135,7 @@ export function ToolsPage() {
                     {i + 1}
                   </span>
                   <a
-                    href={`https://glama.ai/tools/${encodeURIComponent(t.tool_name)}`}
+                      href={`https://glama.ai/mcp/servers/${ghAccount()}/${encodeURIComponent(t.repo_name)}/tools/${encodeURIComponent(t.tool_name)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-zinc-200 hover:text-blue-400 flex items-center gap-1.5"
