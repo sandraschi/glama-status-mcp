@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
 import ScoreTable from "./components/ScoreTable";
 import ToolBreakdown from "./components/ToolBreakdown";
+import ReportView from "./components/ReportView";
 import RefreshPanel from "./components/RefreshPanel";
 
 type Repo = Record<string, unknown>;
-type View = "table" | "detail";
+type View = "table" | "detail" | "report";
 
 export default function App() {
   const [repos, setRepos] = useState<Repo[]>([]);
@@ -62,7 +63,18 @@ export default function App() {
               Fleet score dashboard  -  {repos.length} repos tracked
             </p>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-3 text-sm">
+            <button
+              type="button"
+              onClick={() => setView(view === "report" ? "table" : "report")}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                view === "report"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+              }`}
+            >
+              {view === "report" ? "Table" : "Report"}
+            </button>
             <span className="text-emerald-400">{gradeCounts.A}A</span>
             <span className="text-blue-400">{gradeCounts.B}B</span>
             <span className="text-amber-400">{gradeCounts.C}C</span>
@@ -113,6 +125,8 @@ export default function App() {
 
         {view === "detail" && selectedRepo ? (
           <ToolBreakdown repoName={selectedRepo} onBack={handleBack} />
+        ) : view === "report" ? (
+          <ReportView onBack={() => setView("table")} />
         ) : (
           repos.length > 0 && (
             <ScoreTable repos={repos} onSelectRepo={handleSelectRepo} />
