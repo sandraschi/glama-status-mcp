@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install deps
+        run: uv sync --extra dev --extra web
+
+      - name: PyInstaller backend
+        run: |
+          & "$env:USERPROFILE\.local\bin\uv.exe" tool install pyinstaller
+          & "$env:USERPROFILE\.local\share\uv\tools\pyinstaller\Scripts\pyinstaller.exe" glama-status-mcp-backend.spec --clean --noconfirm
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Build frontend
+        working-directory: webapp
+        run: |
+          npm ci
+          npx vite build
+
+      - name: Pack MCPB
+        run: |
+          npx @anthropic-ai/mcpb pack . dist/glama-status-mcp-${{ github.ref_name }}.mcpb
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/glama-status-mcp-backend.exe
+            dist/glama-status-mcp-${{ github.ref_name }}.mcpb

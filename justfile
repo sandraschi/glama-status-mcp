@@ -32,6 +32,13 @@ refresh:
 lint:
     uv run ruff check src/
 
+# Run tests
+test:
+    uv run pytest tests/ -q
+
+# CI checks (matching CI workflow)
+ci: lint test
+
 # Format check
 format-check:
     uv run ruff format --check src/
