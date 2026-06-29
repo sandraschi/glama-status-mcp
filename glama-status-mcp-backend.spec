@@ -1,4 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
+from PyInstaller.utils.hooks import collect_submodules
+
+# Force-include fastmcp.server.context before Analysis resolves deps
+os.environ.setdefault("PYINSTALLER_IMPORT_OVERRIDE", "")
+
 a = Analysis(
     ['run_server.py'], pathex=['src'],
     datas=[('src/glama_status_mcp', 'glama_status_mcp')],
@@ -8,28 +14,18 @@ a = Analysis(
         'uvicorn.protocols.http.httptools_impl',
         'uvicorn.protocols.http.h11_impl',
         'uvicorn.lifespan', 'uvicorn.lifespan.on',
-        'aiosqlite', 'fastmcp.server.context',
+        'aiosqlite', 'fastmcp.server.context', 'fastmcp.server.server',
+        'mcp.server.lowlevel.server',
     ],
     excludes=['tkinter', 'setuptools', 'pip', 'wheel', 'test', 'tests',
               'unittest', '_distutils_hack'],
     noarchive=True,
 )
-# Collect all fastmcp + pydantic submodules (lazy imports)
-_fastmcp_subs = []
-_pydantic_subs = []
-try:
-    _fastmcp_subs = h.collect_submodules('fastmcp')
-except Exception:
-    _fastmcp_subs = ['fastmcp.server', 'fastmcp.server.context',
-                     'fastmcp.server.server', 'fastmcp.experimental']
-try:
-    _pydantic_subs = h.collect_submodules('pydantic')
-except Exception:
-    _pydantic_subs = ['pydantic.networks', 'pydantic.color',
-                      'pydantic.functional_validators']
-a.hiddenimports.extend(_fastmcp_subs)
-a.hiddenimports.extend(_pydantic_subs)
-_keep_dist = ['fastmcp-', 'prefab_ui-', 'opentelemetry-', 'email_validator-']
+# Collect ALL fastmcp + pydantic submodules (lazy imports)
+a.hiddenimports.extend(collect_submodules('fastmcp'))
+a.hiddenimports.extend(collect_submodules('pydantic'))
+_keep_dist = ['fastmcp-', 'mcp-', 'prefab_ui-', 'opentelemetry-',
+              'email_validator-']
 _saved = [e for e in a.datas
           if isinstance(e, tuple)
           and any(k in str(e[0]) for k in _keep_dist)

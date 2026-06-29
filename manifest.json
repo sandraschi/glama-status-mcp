@@ -1,0 +1,26 @@
+{
+  "manifest_version": "0.2",
+  "name": "glama-status-mcp",
+  "version": "0.1.1",
+  "description": "Daily-refreshed Glama score tracker for the sandraschi fleet. Scrapes per-tool TDQS grades from glama.ai, stores in SQLite with snapshot history, surfaces via MCP tools and a Vite/React web dashboard.",
+  "author": { "name": "sandraschi" },
+  "server": {
+    "type": "python",
+    "entry_point": "src/glama_status_mcp/server.py",
+    "mcp_config": {
+      "command": "python",
+      "args": ["-m", "glama_status_mcp.server"],
+      "env": {
+        "PYTHONPATH": "${PWD}",
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  },
+  "tools": [
+    { "name": "glama_status", "description": "Portmanteau: list, get, worst_tools, refresh, history, staleness, report, deltas" },
+    { "name": "glama_scores_summary", "description": "Compact fleet-wide score summary with grade distribution" },
+    { "name": "glama_daily_report", "description": "Full markdown daily report: grade table, score deltas, worst tools, stale repos" },
+    { "name": "show_glama_status_card", "description": "Prefab UI card - fleet overview dashboard" },
+    { "name": "show_glama_repo_card", "description": "Prefab UI card - per-repo score breakdown with tool list" }
+  ]
+}
