@@ -48,22 +48,15 @@ just refresh         # Manual scrape + snapshot
 | Help | 5-tab documentation: Overview, Scoring, MCP Tools, REST API, FAQ |
 | Settings | GitHub/Glama account config, persisted in localStorage |
 
-## Scored Repos
+## Configuration
 
-10 demo repos with actual Glama scores. Add yours via `glama_status(add_repo)` or edit `config/fleet-repos.json`.
+The tracked fleet is defined in `config/fleet-repos.json`. Start with an empty fleet, then discover your repos:
 
-| Repo | Grade | Score | Tools |
-|------|-------|-------|-------|
-| blender-mcp | C | 2.70 | 67 |
-| windows-operations-mcp | B | 3.00 | 17 |
-| virtualization-mcp | B | 3.06 | 9 |
-| worldlabs-mcp | B | 3.38 | 20 |
-| robotics-mcp | A | 3.58 | 8 |
-| bumi-mcp | A | 3.64 | 2 |
-| xkcd-mcp | A | 3.67 | 6 |
-| cursor-mcp | A | 3.80 | 6 |
-| steam-mcp | A | 3.81 | 14 |
-| email-mcp | A | 3.82 | 10 |
+```python
+glama_status(operation="discover")
+```
+
+This scrapes `glama.ai/mcp/servers?query=author%3A{your_user}` to find all registered MCP servers. Add individual repos via `add_repo` or edit the config file directly.
 
 ## Scoring (Glama TDQS)
 
