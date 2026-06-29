@@ -40,39 +40,39 @@ async def glama_status(
     limit: int = 50,
     ctx: Context | None = None,
 ) -> dict:
-    """Fleet-wide Glama score tracker -- query per-tool TDQS grades.
+    """Query and manage Glama TDQS scores for tracked MCP fleet repos.
 
-    Identifies worst-scoring tools, trigger rescans.
-    When to use: check fleet repo Glama scores, find tools needing
-    docstring fixes, or trigger a refresh.
-    When NOT to use: for code diagnostics use the repo's own tools;
-    for Glama submission/review use glama.ai directly.
-    Preconditions: repo must have been submitted to Glama and scored.
+    [RATIONALE] Portmanteau consolidates 12 related fleet score
+    operations into one discoverable tool. Prevents 12-tool explosion
+    while keeping the operation enum as a built-in catalog.
 
-    Operations:
-    - list:  All repos, worst-first.
-    - get:  Per-tool breakdown for one repo (repo_name required).
-    - worst_tools:  Lowest-scoring tools fleet-wide.
-    - refresh:  Rescrape all fleet repos + snapshot.
-    - history:  Recent refresh log entries.
-    - staleness:  Repos >7d since last scrape.
-    - report:  Full daily status report.
-    - deltas:  Score changes between last two snapshots.
-    - add_repo:  Add a repo to track (name, optional author/slug).
-    - remove_repo:  Stop tracking a repo.
-    - reload_config:  Reload fleet-repos.json config file.
-    - discover:  Find all MCP repos for an author on Glama.
+    BEHAVIOR: Routes to the appropriate database query or scraper
+    based on the operation parameter. Returns structured dicts with
+    success, data, count, and a human-readable message. Mutating
+    operations (refresh, add_repo, remove_repo, discover) persist
+    changes to SQLite or fleet-repos.json. Read operations are
+    instantaneous from the local database.
 
-    Args:
-        operation: One of: list, get, worst_tools, refresh, history,
-                   staleness, report, deltas.
-        repo_name: Required for get. e.g. "virtualization-mcp".
-        limit: Max results. Default 50, max 200.
+    USAGE GUIDELINES:
+    - Use `list` to check fleet health at a glance (sorted worst-first).
+    - Use `get` to deep-dive a repo's per-tool dimension breakdown.
+    - Use `refresh` to pull fresh scores from Glama (rate-limited, 1s delay).
+    - Use `report` for a structured JSON summary suitable for automation.
+    - Use `discover` once to auto-populate fleet-repos.json from Glama.
+    - Use `add_repo` to track a single new repo by name.
+    - Do NOT call `refresh` excessively -- Glama scraping is polite-rate-limited.
+    - Do NOT call `get` before ensuring data exists (check with `list` first).
 
-    Returns:
-        success (bool), operation (str),
-        data (list|dict), count (int), message (str).
-        On failure: success=False, error (str).
+    ## Return Format
+    {success: bool, operation: str, data: list|dict, count: int, message: str}
+    On failure: {success: False, error: str, recovery_options: [str]}
+
+    ## Examples
+    glama_status(operation="list")
+    glama_status(operation="get", repo_name="email-mcp")
+    glama_status(operation="worst_tools", limit=10)
+    glama_status(operation="refresh")
+    glama_status(operation="discover")
     """
     if operation == "list":
         repos = get_all_repo_scores()
@@ -313,10 +313,27 @@ async def _do_refresh(ctx: Context | None = None) -> dict:
 
 @mcp.tool(annotations=_READ_ONLY)
 async def glama_scores_summary() -> dict:
-    """Return compact fleet-wide score summary.
+    """Grade distribution and per-repo summary across the tracked fleet.
 
-    Grades per repo and count per grade bucket.
-    Returns: success, grade_distribution, repos, count, message.
+    BEHAVIOR: Queries all repos from SQLite, tabulates grade
+    distribution (A/B/C/D/F counts), and returns a compact per-repo
+    summary with grade, score, TDQS mean/min, tool count, and
+    last-scraped timestamp. Read-only, instantaneous from local DB.
+
+    USAGE GUIDELINES:
+    - Use for a quick health snapshot without the full report.
+    - Use before calling `get` to identify which repos to drill into.
+    - Do NOT use for per-tool dimension detail -- call `get` instead.
+    - Do NOT use for delta tracking -- call `deltas` or `report`.
+
+    ## Return Format
+    {success: bool, grade_distribution: {A:n, B:n, C:n, D:n, F:n},
+     repos: [{name, grade, score, tdqs_mean, tdqs_min, tools,
+              last_scraped}], count: int, message: str}
+
+    ## Examples
+    glama_scores_summary()
+    # 10 repos: 5A/3B/1C/1D/0F
     """
     repos = get_all_repo_scores()
     grades: dict[str, int] = {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0, "none": 0}
@@ -349,18 +366,29 @@ async def glama_scores_summary() -> dict:
 
 @mcp.tool(annotations=_READ_ONLY)
 async def glama_daily_report(format: str = "markdown") -> dict:
-    """Generate daily fleet health report.
+    """Full markdown daily fleet health report with deltas, worst tools, stale repos.
 
-    Includes grade distribution, recent changes, worst tools, stale repos.
-    When to use: once daily for comprehensive fleet Glama score overview.
-    When NOT to use: for single repo details use glama_status(get).
-    Preconditions: at least one refresh must have been run.
+    BEHAVIOR: Generates a complete report from the local SQLite
+    database including grade distribution, per-repo table (worst-first),
+    score changes since the last snapshot, the 5 worst-scoring tools
+    fleet-wide, and repos with data older than 7 days. In markdown
+    mode, produces a formatted document ready for email, IDE ingestion,
+    or daily digest. In JSON mode, returns the raw report dict.
 
-    Args:
-        format: "markdown" or "json". Default "markdown".
+    USAGE GUIDELINES:
+    - Use once daily for a comprehensive fleet health overview.
+    - Use markdown format for human-readable reports or IDE LLM ingestion.
+    - Use JSON format for programmatic consumption or custom dashboards.
+    - Do NOT use for single-repo detail -- call `glama_status(get)`.
+    - Precondition: at least one refresh must have been run.
 
-    Returns:
-        success, format, markdown (if markdown), data, message.
+    ## Return Format
+    {success: bool, format: str, markdown: str (markdown mode),
+     data: dict (raw report), message: str}
+
+    ## Examples
+    glama_daily_report()
+    glama_daily_report(format="json")
     """
     report = generate_report()
     deltas = compute_deltas()
@@ -663,17 +691,31 @@ async def glama_agentic_analyze(
     repo_name: str = "",
     ctx: Context | None = None,
 ) -> dict:
-    """Analyze Glama scores with LLM sampling and generate fixable todos.
+    """Use the connected LLM to analyze Glama TDQS scores and generate fixable todo lists.
 
-    Uses the connected LLM (via MCP ctx.sample) to intelligently analyze a
-    repo's tool docstring scores and produce actionable fix tasks.
+    BEHAVIOR: Gathers all per-tool scores with their 6 dimension
+    breakdowns for the specified repo (or the entire fleet if empty),
+    constructs a structured analysis prompt including the TDQS formula
+    and grade thresholds, then sends it to the host LLM via FastMCP
+    ctx.sample(). The LLM produces a summary, top 5 fixes, and
+    common failure patterns. Falls back gracefully if sampling is
+    unavailable (returns a clear error with recovery options).
 
-    Args:
-        repo_name: Fleet repo name to analyze, or empty for fleet-wide.
-        ctx: MCP context for sampling (auto-injected).
+    USAGE GUIDELINES:
+    - Use after a `refresh` to analyze fresh scores with LLM insight.
+    - Use with `repo_name` for targeted analysis of a specific server.
+    - Use without `repo_name` for fleet-wide LLM health overview.
+    - Requires a sampling-capable MCP client (Claude Desktop, Cursor).
+    - Fall back to `glama_improvement_plan` prompt if sampling unavailable.
 
-    Returns:
-        success, repo_name, analysis (LLM output), todos (list).
+    ## Return Format
+    {success: bool, repo_name: str, analysis: str (LLM output),
+     message: str}
+    On failure: {success: False, error: str, recovery_options: [str]}
+
+    ## Examples
+    glama_agentic_analyze(repo_name="blender-mcp")
+    glama_agentic_analyze()  # fleet-wide
     """
     if not ctx:
         return {
@@ -742,17 +784,18 @@ async def glama_agentic_analyze(
 
 @mcp.tool(annotations=_MUTATING)
 async def glama_generate_reports(repo_name: str = "") -> dict:
-    """Generate markdown analysis reports for repos.
+    """Write per-repo markdown fix-todo reports to the reports/ directory.
 
-    Creates per-repo fix-todo reports in the reports/ directory,
-    suitable for ingestion by IDE LLMs. If repo_name is empty,
-    generates reports for all scored repos.
+    For each scored repo, writes reports/{repo}.md with a tool-by-tool
+    dimension table and prioritized fix-todo list. Pass repo_name for
+    a single report; omit for all. Returns paths and count.
 
-    Args:
-        repo_name: Optional. If set, generate only for that repo.
+    ## Return Format
+    {success, operation, data: {paths: [str], count: int}, message}
 
-    Returns:
-        success, paths (list of generated file paths), count.
+    ## Examples
+    glama_generate_reports(repo_name="email-mcp")
+    glama_generate_reports()  # all repos
     """
     from glama_status_mcp.reporting import (
         write_all_repo_reports,
