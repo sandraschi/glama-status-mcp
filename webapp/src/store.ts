@@ -24,11 +24,11 @@ export const useStore = create<AppState>((set) => ({
   fetchRepos: async () => {
     set({ loading: true, error: null });
     try {
-      const r = await fetch("/api/repos?limit=-1");
+      const r = await fetch("/api/repos");
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
-      const repos = Array.isArray(data) ? data : (data.repos || []);
-      set({ repos, loading: false });
+      const repos = data.repos || data || [];
+      set({ repos: Array.isArray(repos) ? repos : [], loading: false });
     } catch (e: unknown) {
       set({
         error: e instanceof Error ? e.message : "Failed to load repos",

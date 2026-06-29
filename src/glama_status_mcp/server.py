@@ -37,7 +37,8 @@ _OP_LIST = ("list, get, worst_tools, refresh, history, staleness, "
 async def glama_status(
     operation: str,
     repo_name: str | None = None,
-    limit: int = 50,
+    limit: int = 0,
+    offset: int = 0,
     ctx: Context | None = None,
 ) -> dict:
     """Query and manage Glama TDQS scores for tracked MCP fleet repos.
@@ -76,22 +77,25 @@ async def glama_status(
     """
     if operation == "list":
         repos = get_all_repo_scores()
-        offset = max(0, limit if limit > 0 else 0)
-        page_size = min(50, max(1, abs(limit) if limit != 50 else 50))
         total = len(repos)
-        if limit < 0:
-            offset = 0
-            page_size = total
-        page = repos[offset:offset + page_size]
+        page_size = min(100, max(1, limit)) if limit > 0 else total
+        effective_offset = max(0, offset)
+        page = repos[
+            effective_offset:effective_offset + page_size
+        ]
         return {
             "success": True,
             "operation": operation,
             "data": page,
             "count": len(page),
             "total": total,
-            "offset": offset,
+            "offset": effective_offset,
             "limit": page_size,
-            "message": f"Found {total} repos ({len(page)} shown).",
+            "has_more": (effective_offset + page_size) < total,
+            "message": (
+                f"Found {total} repos "
+                f"(showing {len(page)}, offset {effective_offset})."
+            ),
         }
 
     if operation == "get":
@@ -885,12 +889,13 @@ def main():
         async def api_repos(limit: int = 0, offset: int = 0):
             repos = get_all_repo_scores()
             total = len(repos)
-            if limit > 0:
-                repos = repos[offset:offset + limit]
-            elif limit < 0:
-                pass  # return all
-            return {"repos": repos, "total": total, "offset": offset,
-                    "limit": limit if limit else total}
+            page_size = min(200, max(1, limit)) if limit > 0 else total
+            page = repos[offset:offset + page_size]
+            return {
+                "repos": page, "total": total,
+                "offset": offset, "limit": page_size,
+                "has_more": (offset + page_size) < total,
+            }
 
         @app.get("/api/repos/{name}")
         async def api_repo(name: str):
