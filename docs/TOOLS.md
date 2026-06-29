@@ -31,15 +31,17 @@ Full markdown report with grade table, score deltas, worst tools, stale repos.
 |-------|---------|-------------|
 | `format` | `"markdown"` | `"markdown"` or `"json"` |
 
-## glama_agentic_analyze (MUTATING, requires sampling-capable client)
+## glama_agentic_analyze (MUTATING)
 
-Uses MCP `ctx.sample()` to call back to the CONNECTED LLM (Claude
-Desktop or Cursor) for autonomous analysis of Glama scores.
-Generates a summary, top 5 fixes, and common patterns.
+Analyzes Glama scores using the best available LLM. Three-layer fallback:
 
-This is the **sampling-based analysis path** -- the LLM runs as part
-of the MCP client (not a separate local server). Falls back with
-a clear error message when sampling is unavailable.
+| Priority | Source | When it works |
+|----------|--------|---------------|
+| 1 | MCP `ctx.sample()` | Claude Desktop, Cursor (sampling-capable clients) |
+| 2 | Configured provider | Any provider set in Settings or `config/llm-settings.json` |
+| 3 | Auto-discovered | Ollama (port 11434) or LM Studio (port 1234) |
+
+Returns analysis, top 5 fixes, and common failure patterns.
 
 | Param | Default | Description |
 |-------|---------|-------------|

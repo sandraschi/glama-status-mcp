@@ -695,95 +695,180 @@ async def glama_agentic_analyze(
     repo_name: str = "",
     ctx: Context | None = None,
 ) -> dict:
-    """Use the connected LLM to analyze Glama TDQS scores and generate fixable todo lists.
+    """Analyze Glama TDQS scores using the best available LLM.
 
-    BEHAVIOR: Gathers all per-tool scores with their 6 dimension
-    breakdowns for the specified repo (or the entire fleet if empty),
+    Three-layer fallback:
+    1. MCP ctx.sample() -- Claude Desktop / Cursor sampling
+    2. Configured provider -- Ollama/LM Studio/OpenAI from Settings
+    3. Auto-discovered -- local Ollama (11434) or LM Studio (1234)
+
+    BEHAVIOR: Gathers per-tool scores with 6 dimension breakdowns,
     constructs a structured analysis prompt including the TDQS formula
-    and grade thresholds, then sends it to the host LLM via FastMCP
-    ctx.sample(). The LLM produces a summary, top 5 fixes, and
-    common failure patterns. Falls back gracefully if sampling is
-    unavailable (returns a clear error with recovery options).
+    and grade thresholds, then sends it to the available LLM.
+    Returns a summary, top 5 fixes, and common failure patterns.
 
     USAGE GUIDELINES:
-    - Use after a `refresh` to analyze fresh scores with LLM insight.
-    - Use with `repo_name` for targeted analysis of a specific server.
-    - Use without `repo_name` for fleet-wide LLM health overview.
-    - Requires a sampling-capable MCP client (Claude Desktop, Cursor).
-    - Fall back to `glama_improvement_plan` prompt if sampling unavailable.
+    - Use after refresh for fresh score analysis.
+    - Works in Claude Desktop (sampling), Cursor (sampling), or any
+      MCP client with a local/cloud LLM configured.
+    - Configure preferred provider in the webapp Settings page.
+    - Falls back gracefully if no LLM is reachable.
 
     ## Return Format
-    {success: bool, repo_name: str, analysis: str (LLM output),
-     message: str}
-    On failure: {success: False, error: str, recovery_options: [str]}
+    {success, repo_name, analysis (LLM output), message, source}
+    On failure: {success: False, error, recovery_options}
 
     ## Examples
     glama_agentic_analyze(repo_name="blender-mcp")
     glama_agentic_analyze()  # fleet-wide
     """
-    if not ctx:
-        return {
-            "success": False,
-            "error": "Sampling not available -- run from an MCP client with sampling support.",
-            "recovery_options": [
-                "Use glama_improvement_plan prompt instead",
-                "Run glama_generate_repo_report for a static analysis",
-            ],
-        }
-
+    # Build the prompt data
     if repo_name:
         repo = get_repo_score(repo_name)
         if not repo:
-            return {"success": False, "error": f"Repo '{repo_name}' not found."}
+            return {
+                "success": False,
+                "error": f"Repo '{repo_name}' not found.",
+            }
         scope = f"repo '{repo_name}'"
         tools = sorted(
             repo.get("tools", []), key=lambda t: t.get("score", 5)
         )
         tool_list = "\n".join(
             f"- {t.get('name')}: {t.get('grade')}/{t.get('score')}/5 "
-            f"(Purpose={t.get('purpose')}, Usage={t.get('usage_guidelines')}, "
-            f"Behavior={t.get('behavior')}, Params={t.get('parameters')}, "
-            f"Concise={t.get('conciseness')}, Complete={t.get('completeness')})"
+            f"(Purpose={t.get('purpose')}, "
+            f"Usage={t.get('usage_guidelines')}, "
+            f"Behavior={t.get('behavior')}, "
+            f"Params={t.get('parameters')}, "
+            f"Concise={t.get('conciseness')}, "
+            f"Complete={t.get('completeness')})"
             for t in tools
         )
     else:
         report = generate_report()
         scope = "entire fleet"
         repos_desc = "\n".join(
-            f"- {r['name']}: {r.get('overall_grade')} (score: {r.get('overall_score')})"
+            f"- {r['name']}: {r.get('overall_grade')} "
+            f"(score: {r.get('overall_score')})"
             for r in report["repos"][:10]
         )
         tool_list = f"Fleet repos:\n{repos_desc}"
 
     prompt = (
-        f"You are a Glama TDQS (Tool Definition Quality Score) analyst. "
+        f"You are a Glama TDQS analyst. "
         f"Analyze the following {scope} scores and produce:\n"
         f"1. A one-paragraph summary of the state of {scope}\n"
         f"2. The 5 most impactful fixes (specific, actionable)\n"
-        f"3. Any pattern you see across tools (e.g., all missing "
-        f"parameter descriptions, all too verbose)\n\n"
+        f"3. Any pattern you see across tools\n\n"
         f"Scores:\n{tool_list}\n\n"
-        f"TDQS dimensions: Purpose, Usage Guidelines, Behavior, "
-        f"Parameters, Conciseness, Completeness. Score = 60% mean + 40% min."
+        f"TDQS: 6 dimensions (Purpose 25%, Usage 20%, Behavior 20%, "
+        f"Params 15%, Concise 10%, Complete 10%). "
+        f"Score = 60% mean + 40% min."
     )
 
-    try:
-        result = await ctx.sample(prompt)
-        return {
-            "success": True,
-            "repo_name": repo_name or "fleet",
-            "analysis": result,
-            "message": f"Agentic analysis complete for {scope}.",
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "error": f"Sampling failed: {e}",
-            "recovery_options": [
-                "Ensure your MCP client supports sampling (Claude Desktop, Cursor)",
-                "Fall back to glama_improvement_plan prompt",
-            ],
-        }
+    # Layer 1: Try MCP sampling
+    if ctx:
+        try:
+            result = await ctx.sample(prompt)
+            return {
+                "success": True,
+                "repo_name": repo_name or "fleet",
+                "analysis": result,
+                "source": "mcp-sampling",
+                "message": f"Analysis complete for {scope} (via MCP sampling).",
+            }
+        except Exception:  # noqa: S110
+            pass  # Fall through to next layer
+
+    # Layer 2: Try config file + auto-discovered LLM
+    import json
+    from pathlib import Path
+
+    from glama_status_mcp.llm import chat, discover_providers
+
+    config_provider = None
+    config_model = None
+    config_api_key = None
+    config_base_url = None
+
+    config_path = Path(__file__).resolve().parent.parent.parent / "config" / "llm-settings.json"
+    if config_path.exists():
+        try:
+            cfg = json.loads(config_path.read_text(encoding="utf-8"))
+            config_provider = cfg.get("provider")
+            config_model = cfg.get("model")
+            config_api_key = cfg.get("api_key")
+            config_base_url = cfg.get("base_url")
+        except Exception:  # noqa: S110
+            pass
+
+    if config_provider and config_model:
+        try:
+            result = await chat(
+                provider=config_provider,
+                base_url=config_base_url or "http://127.0.0.1:11434/v1",
+                model=config_model,
+                messages=[{"role": "user", "content": prompt}],
+                api_key=config_api_key or "",
+            )
+            return {
+                "success": True,
+                "repo_name": repo_name or "fleet",
+                "analysis": result,
+                "source": f"config-{config_provider}",
+                "message": f"Analysis complete for {scope} (via {config_provider}).",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Configured LLM ({config_provider}) failed: {e}",
+                "recovery_options": [
+                    "Check that your LLM provider is running",
+                    "Update settings in the webapp or config/llm-settings.json",
+                ],
+            }
+
+    # Layer 3: Auto-discover
+    providers = await discover_providers()
+    available = [p for p in providers if p.available]
+    if available:
+        p = available[0]
+        model = p.models[0] if p.models else "default"
+        try:
+            result = await chat(
+                provider=p.name,
+                base_url=p.base_url,
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return {
+                "success": True,
+                "repo_name": repo_name or "fleet",
+                "analysis": result,
+                "source": f"auto-{p.name}",
+                "message": f"Analysis complete for {scope} (via {p.name}).",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Discovered LLM ({p.name}) failed: {e}",
+                "recovery_options": [
+                    "Check that your LLM provider is running",
+                    "Configure a provider in Settings",
+                ],
+            }
+
+    return {
+        "success": False,
+        "error": "No LLM reachable.",
+        "recovery_options": [
+            "Run from Claude Desktop or Cursor for MCP sampling",
+            "Start Ollama: ollama serve",
+            "Start LM Studio and enable the local API",
+            "Set OPENAI_API_KEY environment variable",
+            "Configure a provider in the webapp Settings page",
+        ],
+    }
 
 
 @mcp.tool(annotations=_MUTATING)
@@ -999,6 +1084,36 @@ def main():
                 api_key=api_key,
             )
             return {"success": True, "reply": reply, "provider": provider}
+
+        @app.get("/api/settings/llm")
+        async def api_get_llm_settings():
+            cfg_path = (
+                Path(__file__).resolve().parent.parent.parent
+                / "config" / "llm-settings.json"
+            )
+            if cfg_path.exists():
+                import json
+                return json.loads(cfg_path.read_text(encoding="utf-8"))
+            return {
+                "provider": "ollama",
+                "model": "",
+                "base_url": "http://127.0.0.1:11434/v1",
+                "api_key": "",
+            }
+
+        @app.post("/api/settings/llm")
+        async def api_set_llm_settings(request: dict):
+            import json
+            cfg_path = (
+                Path(__file__).resolve().parent.parent.parent
+                / "config" / "llm-settings.json"
+            )
+            cfg_path.parent.mkdir(parents=True, exist_ok=True)
+            cfg_path.write_text(
+                json.dumps(request, indent=2),
+                encoding="utf-8",
+            )
+            return {"success": True, "message": "LLM settings saved."}
 
         webapp_dir = (
             Path(__file__).resolve().parent.parent.parent / "webapp" / "dist"

@@ -16,8 +16,10 @@ Beta release -- fleet standard webapp, LLM chat, agentic analysis, Tauri NSIS.
 ### Added
 - **LLM integration**: Glom-On auto-discovery (Ollama 11434, LM Studio 1234, OpenAI)
 - **Chat page**: 4 personalities, provider/model selector, conversation history, export/clear
-- **Agentic MCP tool**: `glama_agentic_analyze` using `ctx.sample()` for LLM-powered score analysis
-- **Report generation**: `glama_generate_reports` writes per-repo markdown to `reports/`
+- **Agentic MCP tool**: `glama_agentic_analyze` with 3-layer LLM fallback (MCP sampling → configured provider → auto-discovered)
+- **LLM-powered reports**: `glama_generate_reports(use_llm=True)` calls local/cloud LLM for per-tool analysis, falls back to template
+- **LLM settings persistence**: `config/llm-settings.json` with Settings page UI for provider, model, base_url, API key
+- **Settings page**: GitHub account + LLM provider configuration, persisted to backend
 - **MCP prompt**: `glama_fleet_analysis_prompt` for fleet-wide LLM health analysis
 - **Prefab UI cards**: `show_glama_status_card` (fleet overview), `show_glama_repo_card` (per-repo)
 - **Configurable fleet**: `config/fleet-repos.json` for tracking any Glama author's repos

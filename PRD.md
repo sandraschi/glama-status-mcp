@@ -66,7 +66,9 @@ glama-status-mcp is a daily-refreshed Glama score tracker that:
 - Glom-On auto-discovery: Ollama (11434), LM Studio (1234)
 - OpenAI via `OPENAI_API_KEY` env var
 - Chat page with conversation history, export, clear
-- Agentic analysis via FastMCP `ctx.sample()`
+- Agentic analysis via 3-layer fallback: MCP ctx.sample() → configured provider → auto-discovered
+- LLM-powered report generation (`glama_generate_reports(use_llm=True)`)
+- Persisted provider settings in `config/llm-settings.json`
 
 ### 4.5 Delta Tracking
 - Snapshots created after each successful refresh
