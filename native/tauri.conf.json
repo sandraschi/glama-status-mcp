@@ -6,7 +6,7 @@
     "frontendDist": "../webapp/dist",
     "devUrl": "http://localhost:11073",
     "beforeDevCommand": "npx vite --port 11073 --host",
-    "beforeBuildCommand": ""
+    "beforeBuildCommand": "echo noop"
   },
   "app": {
     "windows": [{
@@ -28,7 +28,7 @@
       "resources/glama-status-mcp-backend.exe"
     ],
     "windows": {
-      "webviewInstallMode": { "type": "skip" },
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
       "nsis": {
         "installMode": "currentUser",
         "installerHooks": "./windows/hooks.nsh"
