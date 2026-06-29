@@ -89,19 +89,22 @@ tests/          -- 35 pytest tests + Playwright E2E
 
 ## Install
 
+### Drag into Claude Desktop
+Download [glama-status-mcp-v0.1.1.mcpb](dist/glama-status-mcp-v0.1.1.mcpb) and drag it onto the Claude Desktop window. No terminal, no config.
+
+### Clone and run
 ```bash
 git clone https://github.com/sandraschi/glama-status-mcp.git
 cd glama-status-mcp
 
-# Python deps
 uv sync --extra dev --extra web
-
-# Run
 .\start.ps1          # Backend + frontend + browser at :11073
 ```
 
-Or register in Claude Desktop:
+### One-click desktop app
+Download the [NSIS installer](native/target/release/bundle/nsis/) (~33 MB) -- no Python, Node, or git required. Embedded backend + WebView2.
 
+### Claude Desktop config (manual)
 ```json
 // %APPDATA%\Claude\claude_desktop_config.json
 {
@@ -113,8 +116,6 @@ Or register in Claude Desktop:
   }
 }
 ```
-
-For a one-click desktop app on Windows, download the [NSIS installer](native/target/release/bundle/nsis/) (~33 MB) -- no Python, Node, or git required. For Claude Desktop drag-and-drop, use the [.mcpb bundle](dist/).
 
 Full manual: [INSTALL.md](INSTALL.md).
 
