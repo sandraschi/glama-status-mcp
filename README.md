@@ -89,8 +89,8 @@ tests/          -- 35 pytest tests + Playwright E2E
 
 ## Install
 
-### Drag into Claude Desktop
-Download [glama-status-mcp-v0.1.1.mcpb](dist/glama-status-mcp-v0.1.1.mcpb) and drag it onto the Claude Desktop window. No terminal, no config.
+### Drag into Claude Desktop (MCP tools only)
+Download [glama-status-mcp-v0.1.1.mcpb](dist/glama-status-mcp-v0.1.1.mcpb) and drag it onto the Claude Desktop window. No terminal, no config. This gives you the 5 MCP tools and 2 prompts in Claude -- **no web dashboard** (use the NSIS installer or `start.ps1` for the full 6-page webapp).
 
 ### Clone and run
 ```bash
