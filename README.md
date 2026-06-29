@@ -89,12 +89,34 @@ tests/          -- 35 pytest tests + Playwright E2E
 
 ## Install
 
-| Path | Audience |
-|------|----------|
-| [INSTALL.md](INSTALL.md) | All installers: Option C (manual), Option D (dev), Options A-B (coming soon) |
-| [start.ps1](start.ps1) | One-click: backend + frontend + browser |
-| [Native installer](native/target/release/bundle/nsis/) | Tauri NSIS: one download, one shortcut |
-| [.mcpb bundle](dist/) | Drag into Claude Desktop |
+```bash
+git clone https://github.com/sandraschi/glama-status-mcp.git
+cd glama-status-mcp
+
+# Python deps
+uv sync --extra dev --extra web
+
+# Run
+.\start.ps1          # Backend + frontend + browser at :11073
+```
+
+Or register in Claude Desktop:
+
+```json
+// %APPDATA%\Claude\claude_desktop_config.json
+{
+  "mcpServers": {
+    "glama-status": {
+      "command": "uv",
+      "args": ["--directory", "C:\\path\\to\\glama-status-mcp", "run", "glama-status-mcp"]
+    }
+  }
+}
+```
+
+For a one-click desktop app on Windows, download the [NSIS installer](native/target/release/bundle/nsis/) (~33 MB) -- no Python, Node, or git required. For Claude Desktop drag-and-drop, use the [.mcpb bundle](dist/).
+
+Full manual: [INSTALL.md](INSTALL.md).
 
 ## Ports
 
