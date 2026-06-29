@@ -1,3 +1,5 @@
+use std::panic;
+
 mod backend;
 use backend::{BackendProcess, spawn_backend};
 use tauri::{Emitter, Manager};
@@ -11,6 +13,10 @@ async fn start_backend(
 }
 
 fn main() {
+    panic::set_hook(Box::new(|info| {
+        eprintln!("[PANIC] {}", info);
+    }));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
