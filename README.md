@@ -54,6 +54,7 @@ glama_status(operation="discover")
 |-----|----------|
 | [Installation](INSTALL.md) | All install methods, prerequisites |
 | [Configuration](docs/CONFIGURATION.md) | Env vars, fleet-repos.json, LLM setup |
+| [Glama Scoring Guide](docs/GLAMA_SCORING.md) | TDQS explained: 6 dimensions, formula, grade thresholds, improvement workflow |
 | [Tool Reference](docs/TOOLS.md) | All 7 tools, 2 prompts, 12 operations |
 | [Development](docs/DEVELOPMENT.md) | Contributing, local setup, Tauri build |
 
