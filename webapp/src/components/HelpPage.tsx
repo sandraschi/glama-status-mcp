@@ -453,7 +453,7 @@ function FaqTab() {
         },
         {
           q: "Can I add more repos to track?",
-          a: "Edit src/glama_status_mcp/models.py and add FleetRepo entries. Each repo needs a Glama score page at https://glama.ai/mcp/servers/sandraschi/{repo}/score.",
+          a: "Call glama_status(operation='discover') to auto-find all repos for your Glama author. Or add them individually with glama_status(operation='add_repo', repo_name='my-repo'). Edit config/fleet-repos.json to manage them manually.",
         },
         {
           q: "What ports does the server use?",
