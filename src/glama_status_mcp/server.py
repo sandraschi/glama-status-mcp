@@ -787,18 +787,25 @@ async def glama_agentic_analyze(
 
 
 @mcp.tool(annotations=_MUTATING)
-async def glama_generate_reports(repo_name: str = "") -> dict:
+async def glama_generate_reports(
+    repo_name: str = "", use_llm: bool = True
+) -> dict:
     """Write per-repo markdown fix-todo reports to the reports/ directory.
 
-    For each scored repo, writes reports/{repo}.md with a tool-by-tool
-    dimension table and prioritized fix-todo list. Pass repo_name for
-    a single report; omit for all. Returns paths and count.
+    Uses the configured LLM (Ollama/LM Studio/OpenAI) for AI-powered
+    per-tool analysis when use_llm=True and an LLM is reachable.
+    Falls back to template-based fix todos when no LLM is available.
+
+    BEHAVIOR: For each scored repo, writes reports/{repo}.md with
+    a tool-by-tool dimension table and analysis. Pass repo_name for
+    a single report; omit for all.
 
     ## Return Format
     {success, operation, data: {paths: [str], count: int}, message}
 
     ## Examples
     glama_generate_reports(repo_name="email-mcp")
+    glama_generate_reports(repo_name="blender-mcp", use_llm=False)
     glama_generate_reports()  # all repos
     """
     from glama_status_mcp.reporting import (
@@ -807,16 +814,21 @@ async def glama_generate_reports(repo_name: str = "") -> dict:
     )
 
     if repo_name:
-        path = write_repo_report(repo_name)
+        path = await write_repo_report(
+            repo_name, use_llm=use_llm
+        )
         paths = [path]
     else:
-        paths = write_all_repo_reports()
+        paths = await write_all_repo_reports(use_llm=use_llm)
 
     return {
         "success": True,
         "operation": "generate_reports",
         "data": {"paths": paths, "count": len(paths)},
-        "message": f"Generated {len(paths)} reports in reports/.",
+        "message": (
+            f"Generated {len(paths)} reports in reports/."
+            f"{' (LLM analysis enabled)' if use_llm else ''}"
+        ),
     }
 
 
@@ -928,15 +940,21 @@ def main():
             return compute_deltas()
 
         @app.get("/api/reports/generate")
-        async def api_reports(repo_name: str = ""):
+        async def api_reports(
+            repo_name: str = "", use_llm: bool = True
+        ):
             from glama_status_mcp.reporting import (
                 write_all_repo_reports,
                 write_repo_report,
             )
             if repo_name:
-                path = write_repo_report(repo_name)
+                path = await write_repo_report(
+                    repo_name, use_llm=use_llm
+                )
                 return {"paths": [path], "count": 1}
-            paths = write_all_repo_reports()
+            paths = await write_all_repo_reports(
+                use_llm=use_llm
+            )
             return {"paths": paths, "count": len(paths)}
 
         @app.get("/api/llm/providers")

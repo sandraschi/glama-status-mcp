@@ -355,6 +355,54 @@ function ToolsTab() {
         </div>
       </div>
 
+      {/* Analysis Paths */}
+      <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
+        <h3 className="font-semibold text-zinc-100 mb-3">
+          Two Analysis Paths
+        </h3>
+        <p className="text-xs text-zinc-400 mb-3">
+          glama-status-mcp has two ways to generate LLM-powered fix analysis.
+          Which one to use depends on your MCP client.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-zinc-950 rounded-lg border border-zinc-800 p-4">
+            <h4 className="text-sm font-medium text-blue-400 mb-2">
+              Path A: MCP Sampling (Claude Desktop / Cursor)
+            </h4>
+            <p className="text-xs text-zinc-400 mb-2">
+              Uses the MCP protocol's &lt;tt&gt;ctx.sample()&lt;/tt&gt; feature to call
+              back to the host LLM. No local LLM setup needed.
+            </p>
+            <pre className="text-xs text-zinc-300 bg-zinc-900 rounded p-2 overflow-x-auto">
+{`glama_agentic_analyze(repo_name="email-mcp")`}
+            </pre>
+            <p className="text-xs text-zinc-400 mt-1">
+              Requires: Claude Desktop or Cursor
+            </p>
+          </div>
+          <div className="bg-zinc-950 rounded-lg border border-zinc-800 p-4">
+            <h4 className="text-sm font-medium text-emerald-400 mb-2">
+              Path B: Local LLM (Ollama / LM Studio / OpenAI)
+            </h4>
+            <p className="text-xs text-zinc-400 mb-2">
+              Auto-discovers Ollama (11434) or LM Studio (1234). Uses the
+              configured provider to analyze tool scores and write reports.
+              Works with any MCP client -- no sampling needed.
+            </p>
+            <pre className="text-xs text-zinc-300 bg-zinc-900 rounded p-2 overflow-x-auto">
+{`glama_generate_reports(repo_name="email-mcp", use_llm=True)`}
+            </pre>
+            <p className="text-xs text-zinc-400 mt-1">
+              Requires: Ollama, LM Studio, or OPENAI_API_KEY
+            </p>
+          </div>
+        </div>
+        <p className="text-xs text-zinc-400 mt-3">
+          If neither is configured, glama_generate_reports falls back
+          to a template-based fix-todo list (no LLM required).
+        </p>
+      </div>
+
       <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
         <h3 className="font-semibold text-zinc-100 mb-3">
           Claude Desktop Registration

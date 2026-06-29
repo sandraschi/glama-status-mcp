@@ -31,9 +31,15 @@ Full markdown report with grade table, score deltas, worst tools, stale repos.
 |-------|---------|-------------|
 | `format` | `"markdown"` | `"markdown"` or `"json"` |
 
-## glama_agentic_analyze (MUTATING)
+## glama_agentic_analyze (MUTATING, requires sampling-capable client)
 
-Uses the connected LLM (via `ctx.sample()`) to analyze scores and generate fixable todos.
+Uses MCP `ctx.sample()` to call back to the CONNECTED LLM (Claude
+Desktop or Cursor) for autonomous analysis of Glama scores.
+Generates a summary, top 5 fixes, and common patterns.
+
+This is the **sampling-based analysis path** -- the LLM runs as part
+of the MCP client (not a separate local server). Falls back with
+a clear error message when sampling is unavailable.
 
 | Param | Default | Description |
 |-------|---------|-------------|
@@ -41,11 +47,18 @@ Uses the connected LLM (via `ctx.sample()`) to analyze scores and generate fixab
 
 ## glama_generate_reports (MUTATING)
 
-Writes per-repo markdown fix-todo reports to `reports/` directory.
+Writes per-repo markdown reports to `reports/`. When `use_llm=True`
+(default) and a local/cloud LLM is reachable, includes AI-powered
+per-tool analysis. Falls back to template-based fix todos otherwise.
 
 | Param | Default | Description |
 |-------|---------|-------------|
 | `repo_name` | `""` | Single repo, or empty for all repos |
+| `use_llm` | `True` | Use configured LLM for analysis; falls back to template when unavailable |
+
+Two analysis paths for the price of one:
+- **LLM analysis** (default): auto-discovers Ollama/LM Studio/OpenAI, sends tool scores to the LLM, includes AI-generated per-tool fix recommendations in `reports/{repo}.md`
+- **Template fallback**: when no LLM is available, generates prioritized fix-todo list based on dimension score thresholds
 
 ## show_glama_status_card (Prefab card)
 
