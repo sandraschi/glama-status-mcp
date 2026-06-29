@@ -11,6 +11,10 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+function ghAccount(): string {
+  try { return localStorage.getItem("glama-status-gh-account") || "sandraschi"; } catch { return "sandraschi"; }
+}
+
 interface Delta {
   repo_name: string;
   current_grade: string;
@@ -311,7 +315,7 @@ export default function ReportView() {
                   {i + 1}
                 </span>
                 <a
-                  href={`https://glama.ai/mcp/tools/${encodeURIComponent(t.tool_name)}`}
+                  href={`https://glama.ai/mcp/servers/${ghAccount()}/${encodeURIComponent(t.repo_name)}/tools/${encodeURIComponent(t.tool_name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-sm text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1"
@@ -355,7 +359,7 @@ export default function ReportView() {
             {stale.map((s) => (
               <a
                 key={s.name}
-                href={`https://glama.ai/mcp/servers/${s.name}`}
+                href={`https://glama.ai/mcp/servers/${ghAccount()}/${s.name}/score`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-red-900/30 border border-red-800/50 rounded-lg px-3 py-1.5 text-sm text-red-300 hover:text-red-200 hover:bg-red-900/50 flex items-center gap-1.5 transition-colors"
