@@ -1,36 +1,35 @@
 import re
-import asyncio
-import json
-from datetime import datetime, timezone
-from typing import Optional
 
 import httpx
 from bs4 import BeautifulSoup
 
-from glama_status_mcp.config import GLAMA_BASE, SCRAPE_TIMEOUT, SCRAPE_DELAY
-from glama_status_mcp.models import RepoScore, ToolScore, ServerCoherence
+from glama_status_mcp.config import GLAMA_BASE, SCRAPE_TIMEOUT
+from glama_status_mcp.models import RepoScore, ToolScore
 
-_USER_AGENT = "glama-status-mcp/0.1 (fleet monitor; sandraschi fleet; polite daily scrape of own repos)"
+_USER_AGENT = (
+    "glama-status-mcp/0.1 (fleet monitor; sandraschi fleet; polite daily scrape of own repos)"
+)
 
 
 def _parse_grade(text: str) -> str:
-    m = re.search(r'\b[ABCDF]\b', text)
+    m = re.search(r"\b[ABCDF]\b", text)
     return m.group(0) if m else ""
 
 
 def _parse_score(text: str) -> float:
-    m = re.search(r'([\d.]+)\s*/\s*5', text)
+    m = re.search(r"([\d.]+)\s*/\s*5", text)
     return float(m.group(1)) if m else 0.0
 
 
-async def scrape_repo(name: str, namespace: str = "sandraschi", slug: str = "") -> Optional[RepoScore]:
+async def scrape_repo(name: str, namespace: str = "sandraschi", slug: str = "") -> RepoScore | None:
     """Fetch and parse a single Glama score page.
-    
+
     Uses polite scraping: descriptive UA, delay handling, timeout.
     Falls back to BrightData proxy if GLAMA_USE_BRIGHTDATA=1 is set.
     Returns None if the page is not found (404) or unreachable.
     """
     import os
+
     use_brightdata = os.getenv("GLAMA_USE_BRIGHTDATA", "").lower() in ("1", "true", "yes")
     brightdata_token = os.getenv("GLAMA_BRIGHTDATA_TOKEN", "")
     path = slug or name
@@ -61,16 +60,16 @@ def _parse_html(html: str, name: str, namespace: str) -> RepoScore:
     score = RepoScore(name=name, glama_namespace=namespace, glama_slug=name)
 
     # Profile completion %
-    el = soup.find(string=re.compile(r'(\d+)%'))
+    el = soup.find(string=re.compile(r"(\d+)%"))
     if el:
-        m = re.search(r'(\d+)%', str(el))
+        m = re.search(r"(\d+)%", str(el))
         if m:
             score.profile_completion = int(m.group(1))
 
     # Latest release
-    el = soup.find(string=re.compile(r'Latest release', re.I))
+    el = soup.find(string=re.compile(r"Latest release", re.I))
     if el and el.parent:
-        m = re.search(r'v?[\d]+\.[\d]+\.[\d]+[^\s]*', el.parent.get_text(strip=True))
+        m = re.search(r"v?[\d]+\.[\d]+\.[\d]+[^\s]*", el.parent.get_text(strip=True))
         if m:
             score.latest_release = m.group(0)
 
@@ -94,7 +93,7 @@ def _parse_html(html: str, name: str, namespace: str) -> RepoScore:
     coherence_labels = {"Disambiguation", "Naming Consistency", "Tool Count", "Completeness"}
     for span in soup.find_all("span", class_=lambda c: c and "czikZZ" in str(c)):
         st = span.get_text(strip=True)
-        m = re.search(r'^(\d+(?:\.\d+)?)\s*/\s*5$', st)
+        m = re.search(r"^(\d+(?:\.\d+)?)\s*/\s*5$", st)
         if not m:
             continue
         parent = span.parent
@@ -117,8 +116,8 @@ def _parse_html(html: str, name: str, namespace: str) -> RepoScore:
     for el in soup.find_all(["p", "div", "span"]):
         txt = el.get_text(strip=True)
         if "Average" in txt and "Lowest" in txt:
-            m_mean = re.search(r'Average\s*([\d.]+)\s*/?\s*5', txt)
-            m_min = re.search(r'Lowest:\s*([\d.]+)\s*/?\s*5', txt)
+            m_mean = re.search(r"Average\s*([\d.]+)\s*/?\s*5", txt)
+            m_min = re.search(r"Lowest:\s*([\d.]+)\s*/?\s*5", txt)
             if m_mean:
                 score.tdqs_mean = float(m_mean.group(1))
             if m_min:
@@ -127,10 +126,15 @@ def _parse_html(html: str, name: str, namespace: str) -> RepoScore:
                 overall = 0.6 * score.tdqs_mean + 0.4 * score.tdqs_min
                 score.overall_score = round(overall, 2)
                 score.overall_grade = (
-                    "A" if overall >= 3.5 else
-                    "B" if overall >= 3.0 else
-                    "C" if overall >= 2.0 else
-                    "D" if overall >= 1.0 else "F"
+                    "A"
+                    if overall >= 3.5
+                    else "B"
+                    if overall >= 3.0
+                    else "C"
+                    if overall >= 2.0
+                    else "D"
+                    if overall >= 1.0
+                    else "F"
                 )
             break
 
@@ -180,10 +184,15 @@ def _parse_html(html: str, name: str, namespace: str) -> RepoScore:
             overall = 0.6 * (sum(vals) / len(vals)) + 0.4 * min(vals)
             score.overall_score = round(overall, 2)
             score.overall_grade = (
-                "A" if overall >= 3.5 else
-                "B" if overall >= 3.0 else
-                "C" if overall >= 2.0 else
-                "D" if overall >= 1.0 else "F"
+                "A"
+                if overall >= 3.5
+                else "B"
+                if overall >= 3.0
+                else "C"
+                if overall >= 2.0
+                else "D"
+                if overall >= 1.0
+                else "F"
             )
 
     return score

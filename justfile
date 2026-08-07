@@ -51,3 +51,9 @@ smoke:
 # Create daily scheduled task
 schedule-daily:
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File '{{justfile_directory()}}\scripts\register-daily-refresh.ps1'
+
+# Bootstrap: install dev deps + pre-commit hook
+bootstrap:
+    uv sync --group dev
+    uv run pre-commit install
+    Write-Host "Pre-commit hooks installed." -ForegroundColor Green

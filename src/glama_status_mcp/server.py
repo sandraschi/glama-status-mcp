@@ -1,19 +1,25 @@
 import asyncio
-import json
 import sys
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
-from fastmcp import FastMCP, Context
+from fastmcp import Context, FastMCP
 
-from glama_status_mcp.config import DATA_DIR, GLAMA_AUTHOR, SCRAPE_DELAY
+from glama_status_mcp.config import SCRAPE_DELAY
 from glama_status_mcp.database import (
-    init_db, seed_fleet, upsert_repo_score, get_all_repo_scores,
-    get_repo_score, get_worst_tools, log_refresh_start,
-    log_refresh_end, get_refresh_history, create_snapshot,
-    generate_report, compute_deltas,
+    compute_deltas,
+    create_snapshot,
+    generate_report,
+    get_all_repo_scores,
+    get_refresh_history,
+    get_repo_score,
+    get_worst_tools,
+    init_db,
+    log_refresh_end,
+    log_refresh_start,
+    seed_fleet,
+    upsert_repo_score,
 )
-from glama_status_mcp.models import FLEET_REPOS, RepoScore
+from glama_status_mcp.models import FLEET_REPOS
 from glama_status_mcp.scraper import scrape_repo
 
 mcp = FastMCP("glama-status-mcp", dependencies=["httpx", "beautifulsoup4", "lxml", "aiosqlite"])
@@ -25,9 +31,9 @@ _MUTATING = {}
 @mcp.tool(annotations=_MUTATING)
 async def glama_status(
     operation: str,
-    repo_name: Optional[str] = None,
+    repo_name: str | None = None,
     limit: int = 50,
-    ctx: Optional[Context] = None,
+    ctx: Context | None = None,
 ) -> dict:
     """Fleet-wide Glama score tracker  -  query per-tool TDQS grades, identify worst-scoring tools, trigger rescans.
 
@@ -74,7 +80,13 @@ async def glama_status(
             return {"success": False, "error": "repo_name required for get operation."}
         repo = get_repo_score(repo_name)
         if not repo:
-            return {"success": False, "error": f"Repo '{repo_name}' not found in database. Try refresh first.", "recovery_options": [f"Run glama_status with operation='refresh' to scrape '{repo_name}' from Glama."]}
+            return {
+                "success": False,
+                "error": f"Repo '{repo_name}' not found in database. Try refresh first.",
+                "recovery_options": [
+                    f"Run glama_status with operation='refresh' to scrape '{repo_name}' from Glama."
+                ],
+            }
         return {
             "success": True,
             "operation": operation,
@@ -109,7 +121,7 @@ async def glama_status(
 
     elif operation == "staleness":
         repos = get_all_repo_scores()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         stale = []
         for r in repos:
             if r.get("last_scraped"):
@@ -158,11 +170,13 @@ async def glama_status(
     return {
         "success": False,
         "error": f"Unknown operation '{operation}'.",
-        "recovery_options": ["Use one of: list, get, worst_tools, refresh, history, staleness, report, deltas."],
+        "recovery_options": [
+            "Use one of: list, get, worst_tools, refresh, history, staleness, report, deltas."
+        ],
     }
 
 
-async def _do_refresh(ctx: Optional[Context] = None) -> dict:
+async def _do_refresh(ctx: Context | None = None) -> dict:
     log_id = log_refresh_start()
     errors: list[str] = []
     succeeded = 0
@@ -171,14 +185,16 @@ async def _do_refresh(ctx: Optional[Context] = None) -> dict:
 
     for i, repo in enumerate(FLEET_REPOS):
         if ctx:
-            ctx.info(f"Scraping {repo.name} ({i+1}/{total})...")
+            ctx.info(f"Scraping {repo.name} ({i + 1}/{total})...")
         try:
             result = await scrape_repo(repo.name, repo.glama_author, repo.glama_slug)
             if result and result.tools:
                 upsert_repo_score(result)
                 succeeded += 1
                 if ctx:
-                    ctx.info(f"  {repo.name}: grade {result.overall_grade}, {len(result.tools)} tools")
+                    ctx.info(
+                        f"  {repo.name}: grade {result.overall_grade}, {len(result.tools)} tools"
+                    )
             elif result and not result.tools:
                 errors.append(f"{repo.name}: page exists but no tools scored (not yet analyzed)")
             else:
@@ -195,7 +211,7 @@ async def _do_refresh(ctx: Optional[Context] = None) -> dict:
     if errors:
         msg += f" Errors: {'; '.join(errors[:5])}"
         if len(errors) > 5:
-            msg += f" (+{len(errors)-5} more)"
+            msg += f" (+{len(errors) - 5} more)"
 
     return {
         "success": succeeded > 0,
@@ -230,15 +246,17 @@ async def glama_scores_summary() -> dict:
     for r in repos:
         g = r.get("overall_grade") or "none"
         grades[g] = grades.get(g, 0) + 1
-        summary.append({
-            "name": r["name"],
-            "grade": r.get("overall_grade"),
-            "score": r.get("overall_score"),
-            "tdqs_mean": r.get("tdqs_mean"),
-            "tdqs_min": r.get("tdqs_min"),
-            "tools": len(r.get("tools", [])),
-            "last_scraped": r.get("last_scraped"),
-        })
+        summary.append(
+            {
+                "name": r["name"],
+                "grade": r.get("overall_grade"),
+                "score": r.get("overall_score"),
+                "tdqs_mean": r.get("tdqs_mean"),
+                "tdqs_min": r.get("tdqs_min"),
+                "tools": len(r.get("tools", [])),
+                "last_scraped": r.get("last_scraped"),
+            }
+        )
     return {
         "success": True,
         "grade_distribution": grades,
@@ -285,13 +303,17 @@ async def glama_daily_report(format: str = "markdown") -> dict:
     ]
 
     # Delta section
-    deltas_with_change = [d for d in deltas if d.get("score_change") is not None and d["score_change"] != 0]
+    deltas_with_change = [
+        d for d in deltas if d.get("score_change") is not None and d["score_change"] != 0
+    ]
     if deltas_with_change:
         lines.append("## Score Changes Since Last Snapshot")
         lines.append("")
         for d in sorted(deltas_with_change, key=lambda x: abs(x["score_change"]), reverse=True):
             arrow = "▲" if (d["score_change"] or 0) > 0 else "▼"
-            lines.append(f"- {d['repo_name']}: {d['previous_score']} → {d['current_score']} ({arrow}{d['score_change']:+.2f})")
+            lines.append(
+                f"- {d['repo_name']}: {d['previous_score']} → {d['current_score']} ({arrow}{d['score_change']:+.2f})"
+            )
         lines.append("")
 
     # All repos table
@@ -307,8 +329,9 @@ async def glama_daily_report(format: str = "markdown") -> dict:
         stale_flag = ""
         if r.get("last_scraped"):
             try:
-                from datetime import datetime, timezone
-                days = (datetime.now(timezone.utc) - datetime.fromisoformat(r["last_scraped"])).days
+                from datetime import datetime
+
+                days = (datetime.now(UTC) - datetime.fromisoformat(r["last_scraped"])).days
                 if days > 7:
                     stale_flag = f"⚠ {days}d"
             except ValueError:
@@ -328,7 +351,9 @@ async def glama_daily_report(format: str = "markdown") -> dict:
         lines.append("| Tool | Repo | Score | Grade |")
         lines.append("|------|------|-------|-------|")
         for t in wt:
-            lines.append(f"| {t['tool_name']} | {t['repo_name']} | {t['tool_score']} | {t['tool_grade']} |")
+            lines.append(
+                f"| {t['tool_name']} | {t['repo_name']} | {t['tool_score']} | {t['tool_grade']} |"
+            )
         lines.append("")
 
     # Stale repos
@@ -373,17 +398,21 @@ def glama_improvement_plan(repo_name: str) -> str:
             f"Conciseness={t.get('conciseness', '?')}",
             f"Completeness={t.get('completeness', '?')}",
         ]
-        lines.append(f"- **{t.get('name')}** ({t.get('grade', '?')}, {t.get('score', '?')}/5)  -  {' | '.join(dims)}")
-    lines.extend([
-        "",
-        "### Fix plan",
-        "1. Fix the worst tool first (it pulls the whole server down via the 60/40 mean/min formula)",
-        "2. Add missing parameter descriptions via `Field(description=...)`",
-        "3. Add behavioral warnings for destructive operations",
-        "4. Add 'When to use' / 'When NOT to use' guidance",
-        "5. Keep docstrings 80-250 words",
-        "6. Make a release, push to PyPI, then trigger 'Sync Server' on glama.ai",
-    ])
+        lines.append(
+            f"- **{t.get('name')}** ({t.get('grade', '?')}, {t.get('score', '?')}/5)  -  {' | '.join(dims)}"
+        )
+    lines.extend(
+        [
+            "",
+            "### Fix plan",
+            "1. Fix the worst tool first (it pulls the whole server down via the 60/40 mean/min formula)",
+            "2. Add missing parameter descriptions via `Field(description=...)`",
+            "3. Add behavioral warnings for destructive operations",
+            "4. Add 'When to use' / 'When NOT to use' guidance",
+            "5. Keep docstrings 80-250 words",
+            "6. Make a release, push to PyPI, then trigger 'Sync Server' on glama.ai",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -393,13 +422,42 @@ def _init():
 
 
 def main():
+    HTTP_PROXY_URL = os.getenv("GLAMA_STATUS_MCP_API_URL", "http://127.0.0.1:11072/mcp")
+    try:
+        import httpx
+
+        r = httpx.post(
+            HTTP_PROXY_URL,
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2025-11-25",
+                    "capabilities": {},
+                    "clientInfo": {"name": "probe", "version": "1"},
+                },
+            },
+            headers={"Accept": "application/json, text/event-stream"},
+            timeout=0.5,
+        )
+        if r.status_code == 200:
+            from fastmcp.server import create_proxy
+
+            proxy = create_proxy(HTTP_PROXY_URL, name="glama-status-mcp")
+            proxy.run(transport="stdio")
+            return
+    except Exception:
+        pass
+
     _init()
     if "--http" in sys.argv:
+        from pathlib import Path
+
         import uvicorn
         from fastapi import FastAPI
         from fastapi.middleware.cors import CORSMiddleware
         from fastapi.staticfiles import StaticFiles
-        from pathlib import Path
 
         app = FastAPI(title="glama-status-mcp")
         app.add_middleware(
@@ -409,7 +467,7 @@ def main():
             allow_headers=["*"],
         )
 
-        asgi_app = mcp.http_app()
+        mcp.http_app(path="/")
 
         @app.get("/health")
         async def health():

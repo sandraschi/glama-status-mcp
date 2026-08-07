@@ -1,11 +1,9 @@
 import json
 import sqlite3
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Optional
+from datetime import UTC, datetime
 
 from glama_status_mcp.config import DB_PATH
-from glama_status_mcp.models import FleetRepo, RepoScore, ToolScore
+from glama_status_mcp.models import FleetRepo, RepoScore
 
 
 def _get_db() -> sqlite3.Connection:
@@ -110,7 +108,7 @@ def seed_fleet(repos: list[FleetRepo]):
 
 def upsert_repo_score(score: RepoScore) -> int:
     conn = _get_db()
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     conn.execute(
         """INSERT INTO repos
         (name, glama_namespace, glama_slug, overall_grade, overall_score,
@@ -193,26 +191,28 @@ def get_all_repo_scores() -> list[dict]:
             "SELECT * FROM tools WHERE repo_id=? ORDER BY score ASC, name ASC",
             (r["id"],),
         ).fetchall()
-        result.append({
-            "id": r["id"],
-            "name": r["name"],
-            "overall_grade": r["overall_grade"],
-            "overall_score": r["overall_score"],
-            "tdqs_grade": r["tdqs_grade"],
-            "tdqs_mean": r["tdqs_mean"],
-            "tdqs_min": r["tdqs_min"],
-            "coherence_grade": r["coherence_grade"],
-            "maintenance_grade": r["maintenance_grade"],
-            "profile_completion": r["profile_completion"],
-            "latest_release": r["latest_release"],
-            "last_scraped": r["last_scraped"],
-            "tools": [dict(t) for t in tools],
-        })
+        result.append(
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "overall_grade": r["overall_grade"],
+                "overall_score": r["overall_score"],
+                "tdqs_grade": r["tdqs_grade"],
+                "tdqs_mean": r["tdqs_mean"],
+                "tdqs_min": r["tdqs_min"],
+                "coherence_grade": r["coherence_grade"],
+                "maintenance_grade": r["maintenance_grade"],
+                "profile_completion": r["profile_completion"],
+                "latest_release": r["latest_release"],
+                "last_scraped": r["last_scraped"],
+                "tools": [dict(t) for t in tools],
+            }
+        )
     conn.close()
     return result
 
 
-def get_repo_score(name: str) -> Optional[dict]:
+def get_repo_score(name: str) -> dict | None:
     conn = _get_db()
     r = conn.execute("SELECT * FROM repos WHERE name=?", (name,)).fetchone()
     if not r:
@@ -244,10 +244,8 @@ def get_worst_tools(limit: int = 20) -> list[dict]:
 
 def log_refresh_start() -> int:
     conn = _get_db()
-    now = datetime.now(timezone.utc).isoformat()
-    cur = conn.execute(
-        "INSERT INTO refresh_log (started_at) VALUES (?)", (now,)
-    )
+    now = datetime.now(UTC).isoformat()
+    cur = conn.execute("INSERT INTO refresh_log (started_at) VALUES (?)", (now,))
     log_id = cur.lastrowid
     conn.commit()
     conn.close()
@@ -262,9 +260,12 @@ def log_refresh_end(log_id: int, attempted: int, succeeded: int, failed: int, er
            repos_failed=?, errors=?
            WHERE id=?""",
         (
-            datetime.now(timezone.utc).isoformat(),
-            attempted, succeeded, failed,
-            json.dumps(errors), log_id,
+            datetime.now(UTC).isoformat(),
+            attempted,
+            succeeded,
+            failed,
+            json.dumps(errors),
+            log_id,
         ),
     )
     conn.commit()
@@ -283,6 +284,7 @@ def get_refresh_history(limit: int = 10) -> list[dict]:
 def create_snapshot(ref_log_id: int) -> str:
     """Create a score snapshot from current repos data, return snapshot_id."""
     import uuid
+
     snapshot_id = str(uuid.uuid4())
     conn = _get_db()
     conn.execute(
@@ -302,9 +304,15 @@ def create_snapshot(ref_log_id: int) -> str:
              tdqs_mean, tdqs_min, tool_count, worst_tool_name, worst_tool_score)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                snapshot_id, r["name"], r["overall_grade"], r["overall_score"],
-                r["tdqs_mean"], r["tdqs_min"],
-                conn.execute("SELECT COUNT(*) FROM tools WHERE repo_id=?", (r["id"],)).fetchone()[0],
+                snapshot_id,
+                r["name"],
+                r["overall_grade"],
+                r["overall_score"],
+                r["tdqs_mean"],
+                r["tdqs_min"],
+                conn.execute("SELECT COUNT(*) FROM tools WHERE repo_id=?", (r["id"],)).fetchone()[
+                    0
+                ],
                 worst["name"] if worst else None,
                 worst["score"] if worst else None,
             ),
@@ -326,11 +334,13 @@ def get_latest_snapshots(n: int = 2) -> list[dict]:
             "SELECT * FROM score_history WHERE snapshot_id=? ORDER BY repo_name",
             (s["id"],),
         ).fetchall()
-        result.append({
-            "snapshot_id": s["id"],
-            "created_at": s["created_at"],
-            "repos": [dict(r) for r in rows],
-        })
+        result.append(
+            {
+                "snapshot_id": s["id"],
+                "created_at": s["created_at"],
+                "repos": [dict(r) for r in rows],
+            }
+        )
     conn.close()
     return result
 
@@ -355,7 +365,9 @@ def compute_deltas() -> list[dict]:
             "previous_grade": p["overall_grade"] if p else None,
             "current_score": c["overall_score"] if c else None,
             "previous_score": p["overall_score"] if p else None,
-            "score_change": round((c["overall_score"] or 0) - (p["overall_score"] or 0), 2) if c and p else None,
+            "score_change": round((c["overall_score"] or 0) - (p["overall_score"] or 0), 2)
+            if c and p
+            else None,
             "current_tdqs_mean": c["tdqs_mean"] if c else None,
             "previous_tdqs_mean": p["tdqs_mean"] if p else None,
             "current_worst_tool": c["worst_tool_name"] if c else None,
@@ -381,8 +393,9 @@ def generate_report() -> dict:
 
     worst_tools = get_worst_tools(5)
     stale = []
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc)
+    from datetime import datetime
+
+    now = datetime.now(UTC)
     for r in repos:
         if r.get("last_scraped"):
             try:
@@ -394,7 +407,7 @@ def generate_report() -> dict:
                 pass
 
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "snapshot_time": snapshot_time,
         "total_repos": len(repos),
         "grade_distribution": grades,

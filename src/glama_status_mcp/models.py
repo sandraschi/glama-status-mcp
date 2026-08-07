@@ -1,4 +1,3 @@
-from datetime import datetime
 from pydantic import BaseModel, Field
 
 
@@ -53,14 +52,14 @@ class FleetRepo(BaseModel):
 # 10 sandraschi repos with actual Glama scores (out of 35 registered)
 # slug overrides for repos where Glama slug differs from repo name
 FLEET_REPOS: list[FleetRepo] = [
-    FleetRepo(name="virtualization-mcp"),               # B   3.06  9 tools
-    FleetRepo(name="bumi-mcp"),                         # A   3.64  2 tools
-    FleetRepo(name="blender-mcp"),                      # C   2.70  67 tools
-    FleetRepo(name="windows-operations-mcp"),           # B   3.00  17 tools
-    FleetRepo(name="worldlabs-mcp"),                    # B   3.38  20 tools
-    FleetRepo(name="robotics-mcp"),                     # A   3.58  8 tools
-    FleetRepo(name="xkcd-mcp"),                         # A   3.67  6 tools
-    FleetRepo(name="cursor-mcp"),                       # A   3.80  6 tools
-    FleetRepo(name="steam-mcp"),                        # A   3.81  14 tools
-    FleetRepo(name="email-mcp"),                        # A   3.82  10 tools
+    FleetRepo(name="virtualization-mcp"),  # B   3.06  9 tools
+    FleetRepo(name="bumi-mcp"),  # A   3.64  2 tools
+    FleetRepo(name="blender-mcp"),  # C   2.70  67 tools
+    FleetRepo(name="windows-operations-mcp"),  # B   3.00  17 tools
+    FleetRepo(name="worldlabs-mcp"),  # B   3.38  20 tools
+    FleetRepo(name="robotics-mcp"),  # A   3.58  8 tools
+    FleetRepo(name="xkcd-mcp"),  # A   3.67  6 tools
+    FleetRepo(name="cursor-mcp"),  # A   3.80  6 tools
+    FleetRepo(name="steam-mcp"),  # A   3.81  14 tools
+    FleetRepo(name="email-mcp"),  # A   3.82  10 tools
 ]
