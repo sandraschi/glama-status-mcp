@@ -20,6 +20,9 @@ dependencies = [
     "aiosqlite>=0.20.0",
     "pydantic>=2.7.0",
     "prefab-ui>=0.14.0",
+    # Required: the fleet launcher starts the HTTP backend by default.
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
 ]
 
 [project.optional-dependencies]
@@ -30,8 +33,6 @@ dev = [
     "respx>=0.21.0",
 ]
 web = [
-    "fastapi>=0.115.0",
-    "uvicorn>=0.32.0",
     "sse-starlette>=2.1.0",
 ]
 
@@ -52,3 +53,10 @@ ignore = ["S106", "S110", "S112", "S106", "S110", "S112", "RUF012", "S603", "S60
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pillow>=12.3.0",
+    "pytesseract>=0.3.13",
+    "pywinauto>=0.6.9",
+]
