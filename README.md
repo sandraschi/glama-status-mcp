@@ -1,4 +1,12 @@
 # glama-status-mcp
+> **ARCHIVED 2026-10-06 — merged into `scraper-mcp`.** This repo was the
+> precursor Glama tracker; its UX lives on as `scraper_advice` (per-repo fix
+> lists), `scraper_fleet` (`staleness` / `worst_tools` / `deltas`), and the
+> Phase 4 digest in `scraper-mcp` (ports 10998/10999). Its scraper targets
+> Glama's pre-2026-07 layout and returns no data on live pages — do not
+> restart this server. Ports 11072/11073 stay reserved until dashboard links
+> migrate (see `WEBAPP_PORTS.md`). Uncommitted tree dirt predates the
+> archive and is intentionally untouched.
 
 Daily-refreshed Glama score tracker for the sandraschi fleet. Scrapes per-tool TDQS grades from glama.ai, stores in SQLite, surfaces via MCP tools and a web dashboard. Tracks deltas between snapshots, generates daily reports, and flags stale repos needing rescan.
 
