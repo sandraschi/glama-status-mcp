@@ -1,0 +1,62 @@
+[
+  {
+    "name": "virtualization-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "bumi-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "blender-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "windows-operations-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "worldlabs-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "robotics-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "xkcd-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "cursor-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "steam-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  },
+  {
+    "name": "email-mcp",
+    "glama_author": "sandraschi",
+    "glama_slug": "",
+    "active": true
+  }
+]
