@@ -1,4 +1,4 @@
-﻿# Per-repo fleet start config for glama-status-mcp
+# Per-repo fleet start config for glama-status-mcp
 # Edit ports/backend target here - start.ps1 is fleet-standard.
 @{
     Name         = 'glama-status-mcp'
@@ -11,6 +11,7 @@
         Module     = 'glama_status_mcp'
         ServeArgs  = @('--http', '--port', '11072')
         SyncExtras = @('dev')
+        SyncOnStart  = $true
     }
     Frontend = @{
         Kind           = 'vite-npm'
