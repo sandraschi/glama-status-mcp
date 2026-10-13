@@ -1,4 +1,5 @@
 import asyncio
+import os
 import sys
 from datetime import UTC, datetime
 
@@ -22,7 +23,7 @@ from glama_status_mcp.database import (
 from glama_status_mcp.models import FLEET_REPOS
 from glama_status_mcp.scraper import scrape_repo
 
-mcp = FastMCP("glama-status-mcp", dependencies=["httpx", "beautifulsoup4", "lxml", "aiosqlite"])
+mcp = FastMCP("glama-status-mcp")
 
 _README_ONLY = {"readonly": True}
 _MUTATING = {}
